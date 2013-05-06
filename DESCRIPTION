@@ -1,0 +1,31 @@
+Package: FieldSpec
+Type: Package
+Title: Functions useful for processing field spectroscopy data
+Version: 0.87
+Date: 2013-02-26
+Author: Shawn P. Serbin
+Maintainer: Shawn P. Serbin <serbin@wisc.edu>
+Description: A field spectroscopy package containing functions to process
+    spectral files collected using Analytical Spectral Devices (ASD)
+    instruments.  The goal is to stream line and standardize spectral data
+    processing for use in ecology, remote sensing, and plant ecophysiological
+    research.
+Depends:
+    XML,
+    Hmisc
+Suggests:
+    testthat,
+    Rprospect,
+    signal
+SystemRequirements: 
+OS_type: Windows, unix, mac
+License: FreeBSD + file LICENSE
+Copyright: Authors
+LazyLoad: yes
+LazyData: FALSE
+Collate:
+    'import.asd.R'
+    'read.asd.R'
+    'spec.utils.R'
+    'average.spec.R'
+    'jump.correction.R'

@@ -1,0 +1,7 @@
+export(average.spec)
+export(concat.spectra)
+export(import.asd)
+export(jump.correction)
+export(read.asd)
+export(settings)
+export(smooth.spectra)
