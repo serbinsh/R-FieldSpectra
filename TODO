@@ -1,0 +1,3 @@
+# TODO
+
+# 1. Update read.asd to allow for separate binary file(s) containing white standard information for converting target spectra from raw DN to %Reflectance
