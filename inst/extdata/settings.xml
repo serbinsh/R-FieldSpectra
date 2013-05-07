@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<settings>
+  <!-- Directory of ASD files or sub-directories to process -->
+  <asd.dir>PATH TO ASD FILES</asd.dir>
+  <!-- Main output directory -->
+  <output.dir>PATH TO OUTPUT</output.dir>
+  <instrument>
+     <name>FieldSpec 3</name>
+     <start.wave>350</start.wave>
+     <end.wave>2500</end.wave>
+     <step.size>1</step.size>
+     <!-- Location of first splice correction -->
+     <jumploc1>651</jumploc1>
+     <!-- Location of second splice correction. For 1800nm set to 1451, for 1830nm set to 1481 -->
+     <jumploc2>1451</jumploc2>
+  </instrument>
+  <options>
+     <!-- Apply jump correction to spectra? TRUE/FALSE -->
+     <jump.correction>TRUE</jump.correction>
+     <!-- Jump correction options -->
+     <firstJumpMax>0.02</firstJumpMax>
+     <secondJumpMax>0.02</secondJumpMax>
+     <!-- Calculate spectral averages? TRUE/FALSE -->
+     <average>TRUE</average>
+     <!-- Length of auto-generate number suffix. E.g. *00001.asd -->
+     <suffix.length>6</suffix.length>
+     <!-- Spectra cutoff for artificial bias.  Results from improper leaf placement in leaf clip or erroneous measurement -->
+     <bias.threshold>0.06</bias.threshold>
+     <!-- Option to set input asd file extension of spectra files -->
+     <asd.file.ext>.asd</asd.file.ext>
+     <!-- Option to set file extension of output spectra files -->
+     <output.file.ext>.csv</output.file.ext>
+  </options>
+</settings>
