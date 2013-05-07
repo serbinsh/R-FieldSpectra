@@ -247,10 +247,11 @@ read.asd = function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,ste
       # Get reference radiance
       seek(to.read,where=17712+skip,origin="start",rw="r")
       ref <- rep(0,length(lambda))
-      for (i in 1:length(ref)){
-        ref[i] <- readBin(to.read,double(),size=8)
-      }
-      
+      # --- OLD CODE ---
+      #for (i in 1:length(ref)){
+      #  ref[i] <- readBin(to.read,double(),size=8)
+      #}
+      ref <- readBin(to.read,what=double(),n=length(lambda),size=8,endian = .Platform$endian)
       close(to.read)
       
       # Calculate refl or trans and setup output
