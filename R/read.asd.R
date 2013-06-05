@@ -248,9 +248,9 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
       
     } # End if/else
     
-    spec.dataframe <- list(Wavelength=lambda, Spectra=out.spec)  # Spectral data
+    output.data.frame <- list(Wavelength=lambda, Spectra=out.spec)  # Spectral data
   } # End of if/else loop for files
-  invisible(spec.dataframe)
+  invisible(output.data.frame)
 } # End of function call
 #==================================================================================================#
 
