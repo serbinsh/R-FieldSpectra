@@ -5,7 +5,7 @@
   read.asd(file.dir = NULL, out.dir = NULL,
     start.wave = NULL, end.wave = NULL, step.size = NULL,
     asd.file.ext = ".asd", output.file.ext = ".csv",
-    spec.dataframe = FALSE, settings.file = NULL)
+    settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{A single ASD binary file or directory of
@@ -30,9 +30,6 @@
   \item{output.file.ext}{optional setting to set file
   extension to output files. Defaults to .csv}
 
-  \item{spec.dataframe}{option to return a data frame with
-  the converted spectra files}
-
   \item{settings.file}{settings file used for spectral
   processing options (OPTIONAL). Contains information
   related to the spectra collection instrument, output
@@ -45,7 +42,7 @@
   output for a single file returns a list with wavelengths
   and measured reflectance or transmittance values.  For a
   directory, outputs individual ascii text files with
-  wavelenght and spectra values for each input ASD file.
+  wavelength and spectra values for each input ASD file.
 }
 \description{
   A function to import raw ASD binary files to ascii flat
