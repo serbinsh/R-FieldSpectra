@@ -33,8 +33,7 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
   
   ### Check for proper input
   if (is.null(settings.file) && is.null(file.dir)){
-    print("*********************************************************************************")
-    stop("******* ERROR: No input file directory given in settings file or function call. *******")
+    stop("No input file directory given in settings file or function call.")
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
   } else if (!is.null(settings.file$asd.dir)){
@@ -43,8 +42,7 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
     
   ### Define wavelengths
   if (is.null(settings.file) && is.null(start.wave)){
-    print("*********************************************************************************")
-    stop(paste0("******* ERROR: No starting wavelength set in settings file or in function call. Starting Wavelength is: ", start.wave, " *******"))
+    stop(paste0("No starting wavelength set in settings file or in function call. Starting Wavelength is: ", start.wave))
   } else if (!is.null(settings.file$instrument$start.wave)){
     start.wave <- as.numeric(settings.file$instrument$start.wave)
   } else if (!is.null(start.wave)){
@@ -52,8 +50,7 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
   }
   
   if (is.null(settings.file) && is.null(end.wave)){
-    print("*********************************************************************************")
-    stop(paste0("******* ERROR: No ending wavelength set in settings file or in function call. Ending Wavelength is: ", end.wave, " *******"))
+    stop(paste0("No ending wavelength set in settings file or in function call. Ending Wavelength is: ", end.wave))
   } else if (!is.null(settings.file$instrument$end.wave)){
     end.wave <- as.numeric(settings.file$instrument$end.wave)
   } else if (!is.null(end.wave)){
@@ -61,8 +58,7 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
   }
   
   if (is.null(settings.file) && is.null(step.size)){
-    print("*********************************************************************************")
-    print("******* WARNING: No wavelength step size give in settings file or in function call. Setting to 1nm by default *******")
+      warning("No wavelength step size give in settings file or in function call. Setting to 1nm by default")
   } else if (!is.null(settings.file$instrument$step.size)){
     step.size <- as.numeric(settings.file$instrument$step.size)
   } else if (!is.null(step.size)){
