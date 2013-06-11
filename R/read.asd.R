@@ -10,6 +10,7 @@
 ##' @param start.wave starting wavelength of ASD binary spectra files.  Depends on instrument.
 ##' @param end.wave ending wavelength of ASD binary spectra files.  Depends on instrument.
 ##' @param step.size wavelength step size for ASD files. E.g. 1nm, 5nm, 10nm
+##' @param image logical. Whether to produce png images of each spectrum
 ##' @param asd.file.ext file extension of ASD files.  Usually ".asd" (Default)
 ##' @param output.file.ext optional setting to set file extension to output files. Defaults to .csv
 ##' @param settings.file settings file used for spectral processing options (OPTIONAL).  
@@ -25,7 +26,7 @@
 ##' 
 ##' @author Shawn P. Serbin
 ##'
-read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL, step.size=NULL, asd.file.ext=".asd",
+read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL, step.size=NULL, image=FALSE, asd.file.ext=".asd",
                     output.file.ext=".csv", settings.file=NULL){
 
   ### Set platform specific file path delimiter.  Probably will always be "/"
@@ -176,6 +177,7 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
       
       ### Output plot of spectra for quick reference
       # First setup plot bounds
+      if(image){
       rng <- range(output.spectra[, 2])
       if (rng[1]<0) rng[1] <- 0
       if (rng[2]>1) rng[2] <- 1
@@ -186,6 +188,7 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
       lines(output.spectra[, 1], output.spectra[, 2], lwd=2)
       box(lwd=2.2)
       dev.off()
+      }
       
       ### Display progress to console
       setTxtProgressBar(pb, j)                      # show progress bar

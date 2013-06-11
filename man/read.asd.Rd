@@ -4,8 +4,8 @@
 \usage{
   read.asd(file.dir = NULL, out.dir = NULL,
     start.wave = NULL, end.wave = NULL, step.size = NULL,
-    asd.file.ext = ".asd", output.file.ext = ".csv",
-    settings.file = NULL)
+    image = FALSE, asd.file.ext = ".asd",
+    output.file.ext = ".csv", settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{A single ASD binary file or directory of
@@ -23,6 +23,9 @@
 
   \item{step.size}{wavelength step size for ASD files. E.g.
   1nm, 5nm, 10nm}
+
+  \item{image}{logical. Whether to produce png images of
+  each spectrum}
 
   \item{asd.file.ext}{file extension of ASD files.  Usually
   ".asd" (Default)}
