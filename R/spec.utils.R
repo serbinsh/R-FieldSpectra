@@ -56,6 +56,115 @@ settings <- function(input.file=NULL){
 
 #--------------------------------------------------------------------------------------------------#
 ##'
+##' @name extract.metadata
+##' @title Extract metadata for each spectra sample.  Works on a single spectra or a directory.
+##' 
+##' @param file.dir File directory or filename of single spectra for processing
+##' @param out.dir Output directory for meta-data information file
+##' @param instrument What instrument was used to collect spectra.  Options: ASD, SE
+##' @param in.file.ext [Optional] Input file extension. E.g. .asd (ASD) or .sed (Spectral Evolution).
+##' Default for ASD instruments is .asd.  Default for Spectral Evolution instruments is .sed
+##' @param output.file.ext [Optional] Output file extension of meta-data information file. Default .csv
+##' @param settings.file [Optional] Spectral settings file
+##' 
+##' @export
+##' 
+##' @author Shawn P. Serbin
+##' 
+extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,in.file.ext=NULL,
+                             output.file.ext=".csv",settings.file=NULL){
+  ### Set platform specific file path delimiter.  Probably will always be "/"
+  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
+  
+  #
+  if (is.null(settings.file) && is.null(file.dir)){
+    print("*********************************************************************************")
+    stop("******* ERROR: No input file or directory given in settings file or function call. *******")
+  } else if (!is.null(file.dir)){
+    file.dir <- file.dir
+  } else if (!is.null(settings.file$spec.dir)){
+    file.dir <- settings.file$spec.dir
+  } 
+  
+  # Run appropriate function for meta-data extraction
+  do.call(paste("extract.metadata",tolower(instrument),sep="."),args = list(file.dir,out.dir,
+                                                                            output.file.ext))
+
+
+}
+#==================================================================================================#
+
+
+#--------------------------------------------------------------------------------------------------#
+##'
+##' @name extract.metadata.asd
+##' @title Extract metadata from raw binary ASD files 
+##' 
+##' @author Shawn P. Serbin
+##' 
+#==================================================================================================#
+
+
+#--------------------------------------------------------------------------------------------------#
+##'
+##' @name extract.metadata.se
+##' @title Extract metadata from Spectral Evolution files 
+##' 
+##' @author Shawn P. Serbin
+##' 
+extract.metadata.se <- function(file.dir,out.dir,output.file.ext){
+  print("Processing file")
+  
+  
+  check <- file.info(file.dir)
+  if (check$isdir){
+    print("TEST. directory")
+    
+  } else {
+    print("TEST. single file")
+    
+    data.line <- strsplit(system(paste("grep -n","Data", file.dir),intern=TRUE)[2],":")[[1]]
+    data.line <- as.numeric(data.line[1])
+    data.line
+    
+    head <- readLines(file.dir,n=data.line-1)
+    #data <- read.table()
+    
+    print(head)
+    
+    out.head <- c("File_Name","Instrument","Detectors","Measurement", "Date", "Time", "Temperature",
+                  "Battery_Voltage","Averages","Integration","Dark_Mode")
+    
+    out.file.name <- unlist(strsplit(file.dir,dlm))
+    out.file.name <- out.file.name[length(out.file.name)]                
+    out.file.name <- unlist(strsplit(out.file.name,".sed"))
+    
+    inst <- gsub(" ","",(strsplit(head[4],":")[[1]])[2])
+    detec <- gsub(" ","",(strsplit(head[5],":")[[1]])[2])
+    meas <- gsub(" ","",(strsplit(head[6],":")[[1]])[2])
+    date <- gsub(" ","",(strsplit(head[7],":")[[1]])[2])
+    time <- gsub(" ","",(strsplit(head[8],"Time:")[[1]])[2])
+    temp <- gsub(" ","",(strsplit(head[9],":")[[1]])[2])
+    batt <- gsub(" ","",(strsplit(head[10],":")[[1]])[2])
+    avg <- gsub(" ","",(strsplit(head[11],":")[[1]])[2])
+    int <- gsub(" ","",(strsplit(head[12],":")[[1]])[2])
+    dm <- gsub(" ","",(strsplit(head[13],":")[[1]])[2])
+    
+    out.metadata <- data.frame(out.file.name,inst,detec,meas,date,time,temp,batt,avg,int,dm)
+    names(out.metadata) <- out.head
+                            
+    write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
+              row.names=FALSE)
+    
+  } # End if/else
+  
+  
+}
+#==================================================================================================#
+
+
+#--------------------------------------------------------------------------------------------------#
+##'
 ##' @name concat.spectra
 ##' @title Concatenate a directory of spectra files into a single .csv file. Works on a single 
 ##' directory or a series of directories
