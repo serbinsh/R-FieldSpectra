@@ -88,6 +88,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,in.file.
   
   # Run appropriate function for meta-data extraction
   do.call(paste("extract.metadata",tolower(instrument),sep="."),args = list(file.dir,out.dir,
+                                                                            in.file.ext,
                                                                             output.file.ext))
 
 
@@ -112,52 +113,70 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,in.file.
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
-extract.metadata.se <- function(file.dir,out.dir,output.file.ext){
-  print("Processing file")
+extract.metadata.se <- function(file.dir,out.dir,in.file.ext,output.file.ext){
+  ### Set platform specific file path delimiter.  Probably will always be "/"
+  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
+  # Check for custom output file extension
+  if (is.null(in.file.ext)) {
+    in.file.ext <- ".sed"
+  } else {
+    in.file.ext <- in.file.ext
+  }
   
+  print("Processing file(s)")
+  
+  out.head <- c("File_Name","Instrument","Detectors","Measurement", "Date", "Time", "Temperature",
+                "Battery_Voltage","Averages","Integration","Dark_Mode","Radiometric_Calibration")
+  
+  # Determine if running on single file or directory
   check <- file.info(file.dir)
-  if (check$isdir){
-    print("TEST. directory")
+  if (check$isdir) {
+    se.files.names <- list.files(path=file.dir,pattern=in.file.ext,full.names=FALSE)
+    se.files.names <- unlist(strsplit(se.files.names,".sed"))
+    se.files <- list.files(path=file.dir,pattern=in.file.ext,full.names=TRUE)
+    out.file.name <- "Spectra"
     
   } else {
-    print("TEST. single file")
-    
-    data.line <- strsplit(system(paste("grep -n","Data", file.dir),intern=TRUE)[2],":")[[1]]
-    data.line <- as.numeric(data.line[1])
-    data.line
-    
-    head <- readLines(file.dir,n=data.line-1)
-    #data <- read.table()
-    
-    print(head)
-    
-    out.head <- c("File_Name","Instrument","Detectors","Measurement", "Date", "Time", "Temperature",
-                  "Battery_Voltage","Averages","Integration","Dark_Mode")
-    
+    se.files <- file.dir
     out.file.name <- unlist(strsplit(file.dir,dlm))
     out.file.name <- out.file.name[length(out.file.name)]                
     out.file.name <- unlist(strsplit(out.file.name,".sed"))
-    
-    inst <- gsub(" ","",(strsplit(head[4],":")[[1]])[2])
-    detec <- gsub(" ","",(strsplit(head[5],":")[[1]])[2])
-    meas <- gsub(" ","",(strsplit(head[6],":")[[1]])[2])
-    date <- gsub(" ","",(strsplit(head[7],":")[[1]])[2])
-    time <- gsub(" ","",(strsplit(head[8],"Time:")[[1]])[2])
-    temp <- gsub(" ","",(strsplit(head[9],":")[[1]])[2])
-    batt <- gsub(" ","",(strsplit(head[10],":")[[1]])[2])
-    avg <- gsub(" ","",(strsplit(head[11],":")[[1]])[2])
-    int <- gsub(" ","",(strsplit(head[12],":")[[1]])[2])
-    dm <- gsub(" ","",(strsplit(head[13],":")[[1]])[2])
-    
-    out.metadata <- data.frame(out.file.name,inst,detec,meas,date,time,temp,batt,avg,int,dm)
-    names(out.metadata) <- out.head
-                            
-    write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
-              row.names=FALSE)
-    
-  } # End if/else
+    se.files.names <- unlist(strsplit(out.file.name,".sed"))
+  }
+
+  # Build empty metadata dataframe
+  inst <- rep(NA,length(se.files));detec <- rep(NA,length(se.files));meas <- rep(NA,length(se.files))
+  date <- rep(NA,length(se.files));time <- rep(NA,length(se.files));temp <- rep(NA,length(se.files))
+  batt <- rep(NA,length(se.files));avg <- rep(NA,length(se.files));int <- rep(NA,length(se.files))
+  dm <- rep(NA,length(se.files)); radcal <- rep(NA,length(se.files))
   
+  # Run metadata extraction
+  for (i in 1:length(se.files)){
+    data.line <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[2],":")[[1]]
+    data.line <- as.numeric(data.line[1])
+    file.head <- readLines(se.files[i],n=data.line-1)
+
+    inst[i] <- gsub(" ","",(strsplit(file.head[4],":")[[1]])[2])
+    detec[i] <- gsub(" ","",(strsplit(file.head[5],":")[[1]])[2])
+    meas[i] <- gsub(" ","",(strsplit(file.head[6],":")[[1]])[2])
+    date[i] <- gsub(" ","",(strsplit(file.head[7],":")[[1]])[2])
+    time[i] <- gsub(" ","",(strsplit(file.head[8],"Time:")[[1]])[2])
+    temp[i] <- gsub(" ","",(strsplit(file.head[9],":")[[1]])[2])
+    batt[i] <- gsub(" ","",(strsplit(file.head[10],":")[[1]])[2])
+    avg[i] <- gsub(" ","",(strsplit(file.head[11],":")[[1]])[2])
+    int[i] <- gsub(" ","",(strsplit(file.head[12],":")[[1]])[2])
+    dm[i] <- gsub(" ","",(strsplit(file.head[13],":")[[1]])[2])
+    radcal[i] <- gsub(" ","",(strsplit(file.head[15],":")[[1]])[2])
+    rm(data.line,file.head)
+  }
+  
+  # Create output
+  out.metadata <- data.frame(se.files.names,inst,detec,meas,date,time,temp,batt,avg,int,dm,radcal)
+  names(out.metadata) <- out.head
+  
+  write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
+            row.names=FALSE)
   
 }
 #==================================================================================================#
