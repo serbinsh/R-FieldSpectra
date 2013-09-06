@@ -103,6 +103,83 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,in.file.
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
+extract.metadata.asd <- function(file.dir,out.dir,in.file.ext,output.file.ext){
+  ### Set platform specific file path delimiter.  Probably will always be "/"
+  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
+  
+  # Check for custom output file extension
+  if (is.null(in.file.ext)) {
+    in.file.ext <- ".asd"
+  } else {
+    in.file.ext <- in.file.ext
+  }
+  
+  print("Processing file(s)")
+  
+  # Determine if running on single file or directory
+  check <- file.info(file.dir)
+  if (check$isdir) {
+    asd.files.names <- list.files(path=file.dir,pattern=in.file.ext,full.names=FALSE)
+    asd.files.names <- unlist(strsplit(se.files.names,in.file.ext))
+    asd.files <- list.files(path=file.dir,pattern=in.file.ext,full.names=TRUE)
+    out.file.name <- "Spectra"
+    
+  } else {
+    asd.files <- file.dir
+    out.file.name <- unlist(strsplit(file.dir,dlm))
+    out.file.name <- out.file.name[length(out.file.name)]                
+    out.file.name <- unlist(strsplit(out.file.name,in.file.ext))
+    asd.files.names <- unlist(strsplit(out.file.name,in.file.ext))
+  }
+  
+  # Defined using Indico Version 8 File Format Standards (http://support.asdi.com/Document/Viewer.aspx?id=95)
+  offsets <- c(0,3,160,178,179,181,182)     ## offset to get to structure
+  info.size <- c(3,157,18,1,1,1,4)          ## size of structure
+  
+  # Run metadata extraction
+  for (i in 1:length(asd.files)){
+    to.read <- file(file.dir,"rb")
+    
+    seek(to.read,where=offsets[1],origin="start",rw="r")
+    file.ver <- readBin(to.read,what=character(),size=info.size[1],endian = .Platform$endian)
+    
+    seek(to.read,where=offsets[2],origin="start",rw="r")
+    comments <- readBin(to.read,what=character(),size=info.size[2],endian = .Platform$endian)
+    
+    #seek(to.read,where=offsets[3],origin="start",rw="r")
+    #time.save <- readBin(to.read,what=character(),size=info.size[3],endian = .Platform$endian)
+    
+    seek(to.read,where=offsets[4],origin="start",rw="r")
+    program.ver <- readBin(to.read,what=raw(),size=info.size[4],endian = .Platform$endian)
+    
+    seek(to.read,where=offsets[5],origin="start",rw="r")
+    file.ver <- readBin(to.read,what=raw(),size=info.size[5],endian = .Platform$endian)
+    
+    seek(to.read,where=offsets[6],origin="start",rw="r")
+    dc.corr <- readBin(to.read,what=raw(),size=info.size[6],endian = .Platform$endian)
+    if (dc.corr=="01"){
+      dc.corr <- "yes"
+    } else {
+      dc.corr <- "no"
+    }
+    
+    seek(to.read,where=offsets[7],origin="start",rw="r")
+    dc.time <- readBin(to.read,what=integer(),size=info.size[7],endian = .Platform$endian)
+    # seconds since 1/1/1970
+    
+    
+    
+    
+    seek(to.read,where=487,origin="start",rw="r")
+    time <- readBin(to.read,what=date(),size=8,endian = .Platform$endian)
+    
+    close(to.read)
+    
+  }
+  
+    
+    
+}
 #==================================================================================================#
 
 
