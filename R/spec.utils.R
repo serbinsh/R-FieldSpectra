@@ -132,28 +132,41 @@ extract.metadata.asd <- function(file.dir,out.dir,in.file.ext,output.file.ext){
     asd.files.names <- unlist(strsplit(out.file.name,in.file.ext))
   }
   
+  # Define locations in file header
   # Defined using Indico Version 8 File Format Standards (http://support.asdi.com/Document/Viewer.aspx?id=95)
-  offsets <- c(0,3,160,178,179,181,182)     ## offset to get to structure
-  info.size <- c(3,157,18,1,1,1,4)          ## size of structure
   
-  # Run metadata extraction
+  ## offset to get to structure
+  offsets <- c(0,3,160,178,179,181,182,186,187,191,195,199,200,201,202,203,204,206,
+               334,390,394,396,398,400,402,406,410,414,418,420,421,425,427,429,431,
+               432,436,438,440,442,444,448)     
+  ## size of structure
+  info.size <- c(3,157,18,1,1,1,4,1,4,4,4,1,1,1,1,1,2,128,56,4,2,2,2,2,4,4,4,4,2,1,
+                 4,2,2,2,1,4,2,2,2,2,4,4)          
+  out.metadata <- data.frame(array(data=NA,dim=c(length(asd.files),length(offsets))))
+  
+  ## Run metadata extraction
   for (i in 1:length(asd.files)){
     to.read <- file(file.dir,"rb")
     
-    seek(to.read,where=offsets[1],origin="start",rw="r")
+    seek(to.read,where=offsets[1],origin="start",rw="r") # 0,3
     file.ver <- readBin(to.read,what=character(),size=info.size[1],endian = .Platform$endian)
+    # File Version - as6
     
-    seek(to.read,where=offsets[2],origin="start",rw="r")
+    seek(to.read,where=offsets[2],origin="start",rw="r") #3,157
     comments <- readBin(to.read,what=character(),size=info.size[2],endian = .Platform$endian)
+    # comment field
     
-    #seek(to.read,where=offsets[3],origin="start",rw="r")
+    #seek(to.read,where=offsets[3],origin="start",rw="r") # 160,18
     #time.save <- readBin(to.read,what=character(),size=info.size[3],endian = .Platform$endian)
+    # time when spectrum was saved 
     
-    seek(to.read,where=offsets[4],origin="start",rw="r")
+    seek(to.read,where=offsets[4],origin="start",rw="r") # 178,1
     program.ver <- readBin(to.read,what=raw(),size=info.size[4],endian = .Platform$endian)
+    # ver. of the program creating this file. major ver in upper nibble, min in lower 
     
     seek(to.read,where=offsets[5],origin="start",rw="r")
-    file.ver <- readBin(to.read,what=raw(),size=info.size[5],endian = .Platform$endian)
+    spec.file.ver <- readBin(to.read,what=raw(),size=info.size[5],endian = .Platform$endian)
+    # spectrum file format version
     
     seek(to.read,where=offsets[6],origin="start",rw="r")
     dc.corr <- readBin(to.read,what=raw(),size=info.size[6],endian = .Platform$endian)
@@ -166,18 +179,200 @@ extract.metadata.asd <- function(file.dir,out.dir,in.file.ext,output.file.ext){
     seek(to.read,where=offsets[7],origin="start",rw="r")
     dc.time <- readBin(to.read,what=integer(),size=info.size[7],endian = .Platform$endian)
     # seconds since 1/1/1970
+    #dc.time <- as.Date(as.POSIXct(dc.time, origin="1970-01-01", tz = "GMT")) #just date
+    dc.time <- as.POSIXct(dc.time, origin="1970-01-01", tz = "GMT") # date and time
+
+    seek(to.read,where=offsets[8],origin="start",rw="r")
+    data.type <- readBin(to.read,what=raw(),size=info.size[8],endian = .Platform$endian)
+    if (data.type==0) {
+      data.type <- "raw_type"
+    } else if (data.type==1) {
+      data.type <- "refl_type"
+    } else if (data.type==2) {
+      data.type <- "rad_type"
+    } else if (data.type==3) {
+      data.type <- "nounits_type"
+    } else if (data.type==4) {
+      data.type <- "nounits_type"
+    } else if (data.type==5) {
+      data.type <- "qi_type"
+    } else if (data.type==6) {
+      data.type <- "trans_type"
+    } else if (data.type==7) {
+      data.type <- "unknown_type"
+    } else if (data.type==8) {
+      data.type <- "abs_type"
+    }
     
+    seek(to.read,where=offsets[9],origin="start",rw="r")
+    ref.time <- readBin(to.read,what=integer(),size=info.size[9],endian = .Platform$endian)
+    # seconds since 1/1/1970 of last white reference
+    wref.time <- as.POSIXct(dc.time, origin="1970-01-01", tz = "GMT") # date and time
+
+    seek(to.read,where=offsets[10],origin="start",rw="r")
+    ch1.wavelength <- readBin(to.read,what=numeric(),size=info.size[10],endian = .Platform$endian)
     
+    seek(to.read,where=offsets[11],origin="start",rw="r")
+    wavelength.step <- readBin(to.read,what=numeric(),size=info.size[11],endian = .Platform$endian)
     
+    seek(to.read,where=offsets[12],origin="start",rw="r")
+    data.format <- readBin(to.read,what=raw(),size=info.size[12],endian = .Platform$endian)
+    if (data.format==0){
+      data.format <- "float"
+    } else if (data.format==1){
+      data.format <- "integer"
+    } else if (data.format==2){
+      data.format <- "double"
+    } else if (data.format==3){
+      data.format <- "unknown"
+    }
     
-    seek(to.read,where=487,origin="start",rw="r")
-    time <- readBin(to.read,what=date(),size=8,endian = .Platform$endian)
+    seek(to.read,where=offsets[13],origin="start",rw="r")
+    old.dc.count <- readBin(to.read,what=raw(),size=info.size[13],endian = .Platform$endian)
+    # number of dark current measurements in average. old version. unused in new file format
+    # use check against new version.  if old >0 then file is an older ASD file format
     
+    seek(to.read,where=offsets[14],origin="start",rw="r")
+    old.ref.count <- readBin(to.read,what=raw(),size=info.size[14],endian = .Platform$endian)
+    # number of ref measurements in average. old version. unused in new file format
+    # use check against new version.  if old >0 then file is an older ASD file format
+    
+    seek(to.read,where=offsets[15],origin="start",rw="r")
+    old.sample.count <- readBin(to.read,what=raw(),size=info.size[15],endian = .Platform$endian)
+    # number of ref measurements in average. old version. unused in new file format
+    # use check against new version.  if old >0 then file is an older ASD file format
+    
+    seek(to.read,where=offsets[17],origin="start",rw="r")
+    channels <- readBin(to.read,what=integer(),size=info.size[17],endian = .Platform$endian)
+    # Num of channels in the detector
+    
+    seek(to.read,where=offsets[20],origin="start",rw="r")
+    int.time <- readBin(to.read,what=integer(),size=info.size[20],endian = .Platform$endian)
+    # Actual integration time in ms
+    
+    seek(to.read,where=offsets[21],origin="start",rw="r")
+    foreoptic.deg <- readBin(to.read,what=integer(),size=info.size[21],endian = .Platform$endian)
+    # The fo attachment's view in degrees
+    
+    seek(to.read,where=offsets[22],origin="start",rw="r")
+    dcc.value <- readBin(to.read,what=integer(),size=info.size[22],endian = .Platform$endian)
+    # The dark current correction value
+    
+    seek(to.read,where=offsets[23],origin="start",rw="r")
+    calib.series <- readBin(to.read,what=integer(),size=info.size[23],endian = .Platform$endian)
+    # calibration series
+    
+    seek(to.read,where=offsets[24],origin="start",rw="r")
+    inst.number <- readBin(to.read,what=integer(),size=info.size[24],endian = .Platform$endian)
+    # instrument number. i.e. serial number of unit
+    
+    seek(to.read,where=offsets[25],origin="start",rw="r")
+    ymin <- readBin(to.read,what=double(),size=info.size[25],endian = .Platform$endian)
+    # setting of the y axis' min value
+    
+    seek(to.read,where=offsets[26],origin="start",rw="r")
+    ymax <- readBin(to.read,what=double(),size=info.size[26],endian = .Platform$endian)
+    # setting of the y axis' min value
+    
+    seek(to.read,where=offsets[27],origin="start",rw="r")
+    xmin <- readBin(to.read,what=double(),size=info.size[27],endian = .Platform$endian)
+    # setting of the x axis' min value
+    
+    seek(to.read,where=offsets[28],origin="start",rw="r")
+    xmax <- readBin(to.read,what=double(),size=info.size[28],endian = .Platform$endian)
+    # setting of the x axis' min value
+    
+    seek(to.read,where=offsets[29],origin="start",rw="r")
+    dyn.range <- readBin(to.read,what=integer(),size=info.size[29],endian = .Platform$endian)
+    # instrument's dynamic range;  ip_numbits;
+    
+    seek(to.read,where=offsets[30],origin="start",rw="r")
+    xmode <- readBin(to.read,what=raw(),size=info.size[30],endian = .Platform$endian)
+    
+    seek(to.read,where=offsets[31],origin="start",rw="r")
+    flags <- readBin(to.read,what=raw(),size=1,endian = .Platform$endian)
+    
+    seek(to.read,where=offsets[32],origin="start",rw="r")
+    dc.count <- readBin(to.read,what=integer(),size=info.size[32],endian = .Platform$endian)
+    # number of dark current measurements in average. new version
+    
+    seek(to.read,where=offsets[33],origin="start",rw="r")
+    ref.count <- readBin(to.read,what=integer(),size=info.size[33],endian = .Platform$endian)
+    # Num of WR in the average 
+    
+    seek(to.read,where=offsets[34],origin="start",rw="r")
+    sample.count <- readBin(to.read,what=integer(),size=info.size[34],endian = .Platform$endian)
+    # Num of spec samples in the avg
+    
+    seek(to.read,where=offsets[35],origin="start",rw="r")
+    inst.type <- readBin(to.read,what=raw(),size=info.size[35],endian = .Platform$endian)
+    if (inst.type==0){
+      inst.type <- "unknown_instrument"
+    } else if (inst.type==1) {
+      inst.type <- "PSII_instrument"
+    } else if (inst.type==2) {
+      inst.type <- "LSVNIR_instrument"
+    } else if (inst.type==3) {
+      inst.type <- "FSVNIR_instrument"
+    } else if (inst.type==4) {
+      inst.type <- "FSFR_instrument"
+    } else if (inst.type==5) {
+      inst.type <- "FSNIR_instrument"
+    } else if (inst.type==6) {
+      inst.type <- "CHEM_instrument"
+    } else if (inst.type==7) {
+      inst.type <- "FSFR_unattended_instrument"
+    }
+    
+    seek(to.read,where=offsets[36],origin="start",rw="r")
+    bulb <- readBin(to.read,what=integer(),size=info.size[36],endian = .Platform$endian)
+    # The id number of the cal bulb
+    
+    seek(to.read,where=offsets[37],origin="start",rw="r")
+    swir1.gain <- readBin(to.read,what=integer(),size=info.size[37],endian = .Platform$endian)
+    # gain setting for swir 1
+    
+    seek(to.read,where=offsets[38],origin="start",rw="r")
+    swir2.gain <- readBin(to.read,what=integer(),size=info.size[38],endian = .Platform$endian)
+    # gain setting for swir 2
+    
+    seek(to.read,where=offsets[39],origin="start",rw="r")
+    swir1.offset <- readBin(to.read,what=integer(),size=info.size[39],endian = .Platform$endian)
+    # offset setting for swir 1
+    
+    seek(to.read,where=offsets[40],origin="start",rw="r")
+    swir2.offset <- readBin(to.read,what=integer(),size=info.size[40],endian = .Platform$endian)
+    # offset setting for swir 2
+    
+    seek(to.read,where=offsets[41],origin="start",rw="r")
+    splice1 <- readBin(to.read,what=numeric(),size=info.size[41],endian = .Platform$endian)
+    # wavelength of VNIR and SWIR1 splice
+    
+    seek(to.read,where=offsets[42],origin="start",rw="r")
+    splice2 <- readBin(to.read,what=numeric(),size=info.size[42],endian = .Platform$endian)
+    # wavelength of SWIR1 and SWIR2 splice
+    
+    ## SMART detector
+    #seek(to.read,where=452,origin="start",rw="r")
+    #serial.number <- readBin(to.read,what=integer(),size=4,endian = .Platform$endian)
+    # 
+    #seek(to.read,where=456,origin="start",rw="r")
+    #readBin(to.read,what=numeric(),size=8,endian = .Platform$endian)
+
     close(to.read)
     
   }
   
-    
+  # Create output
+  out.head <- c("Spectra_File_Name","File_Version","Program_Version","Spec_File_Version",
+                "DC_Correction","DC_Time_GMT","WRef_Time_GMT","Data_Type","Spec_Data_Format","Comments")
+  out.metadata <- data.frame(asd.files.names,file.ver,program.ver,spec.file.ver,dc.corr,dc.time,
+                             wref.time,data.type,data.format,comments)
+  names(out.metadata) <- out.head
+  
+  write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
+            row.names=FALSE)
+  
     
 }
 #==================================================================================================#
