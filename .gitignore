@@ -2,3 +2,5 @@
 .Rbuildignore
 .Rhistory
 .RHistory
+
+R/.Rhistory
