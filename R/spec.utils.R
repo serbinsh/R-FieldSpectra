@@ -62,7 +62,7 @@ settings <- function(input.file=NULL){
 ##' @param file.dir File directory or filename of single spectra for processing
 ##' @param out.dir Output directory for meta-data information file
 ##' @param instrument What instrument was used to collect spectra.  Options: ASD, SE
-##' @param in.file.ext [Optional] Input file extension. E.g. .asd (ASD) or .sed (Spectral Evolution).
+##' @param spec.file.ext [Optional] Input spectra file extension. E.g. .asd (ASD) or .sed (Spectral Evolution).
 ##' Default for ASD instruments is .asd.  Default for Spectral Evolution instruments is .sed
 ##' @param output.file.ext [Optional] Output file extension of meta-data information file. Default .csv
 ##' @param settings.file [Optional] Spectral settings file
@@ -73,10 +73,11 @@ settings <- function(input.file=NULL){
 ##' 
 extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,in.file.ext=NULL,
                              output.file.ext=".csv",settings.file=NULL){
+  
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
-  #
+  # Input directory
   if (is.null(settings.file) && is.null(file.dir)){
     print("*********************************************************************************")
     stop("******* ERROR: No input file or directory given in settings file or function call. *******")
@@ -84,14 +85,51 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,in.file.
     file.dir <- file.dir
   } else if (!is.null(settings.file$spec.dir)){
     file.dir <- settings.file$spec.dir
-  } 
+  }
+  
+  # Output directory
+  if (is.null(settings.file) && is.null(out.dir)){ 
+    print("*********************************************************************************")
+    stop("******* ERROR: No output directory given in settings file or function call. *******")          
+  } else if (!is.null(file.dir)){
+    out.dir <- out.dir
+  } else if (!is.null(settings.file$spec.dir)){
+    out.dir <- settings.file$output.dir
+  }
+  
+  # Instrument
+  if (is.null(settings.file) && is.null(instrument)){ 
+    print("*********************************************************************************")
+    stop("******* ERROR: No instrument defined in settings file or function call. *******")
+  } else if (!is.null(instrument)){
+    instrument <- instrument
+  } else if (!is.null(settings.file$instrument$name)){
+    inst <- c("ASD","ASD","ASD","SE","SE","SE")
+    temp <- tolower(settings.file$instrument$name)
+    index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
+    instrument <- inst[index]
+  }
+  
+  # Input file extension
+  if (is.null(settings.file) && is.null(in.file.ext)){ 
+    print("*********************************************************************************")
+    if(instrument=="ASD") (in.file.ext=".asd")
+    warning("******* WARNING: No input file extension defined in settings file or function call. *******")
+    warning(paste("******* WARNING: Using default: *", in.file.ext," *******",sep="") )
+  } else if (!is.null(in.file.ext)){
+    in.file.ext <- in.file.ext
+  } else if (!is.null(settings.file$options$spec.file.ext)){
+    inst <- c("ASD","ASD","ASD","SE","SE","SE")
+    temp <- tolower(settings.file$instrument$name)
+    index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
+    instrument <- inst[index]
+  }
+  
   
   # Run appropriate function for meta-data extraction
   do.call(paste("extract.metadata",tolower(instrument),sep="."),args = list(file.dir,out.dir,
                                                                             in.file.ext,
                                                                             output.file.ext))
-
-
 }
 #==================================================================================================#
 
