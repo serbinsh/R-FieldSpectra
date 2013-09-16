@@ -169,17 +169,17 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
   # Determine if running on single file or directory
   check <- file.info(file.dir)
   if (check$isdir) {
-    asd.files.names <- list.files(path=file.dir,pattern=in.file.ext,full.names=FALSE)
-    asd.files.names <- unlist(strsplit(se.files.names,in.file.ext))
-    asd.files <- list.files(path=file.dir,pattern=in.file.ext,full.names=TRUE)
+    asd.files.names <- list.files(path=file.dir,pattern=spec.file.ext,full.names=FALSE)
+    asd.files.names <- unlist(strsplit(asd.files.names,spec.file.ext))
+    asd.files <- list.files(path=file.dir,pattern=spec.file.ext,full.names=TRUE)
     out.file.name <- "Spectra"
     
   } else {
     asd.files <- file.dir
     out.file.name <- unlist(strsplit(file.dir,dlm))
     out.file.name <- out.file.name[length(out.file.name)]                
-    out.file.name <- unlist(strsplit(out.file.name,in.file.ext))
-    asd.files.names <- unlist(strsplit(out.file.name,in.file.ext))
+    out.file.name <- unlist(strsplit(out.file.name,spec.file.ext))
+    asd.files.names <- unlist(strsplit(out.file.name,spec.file.ext))
   }
   
   # Define locations in file header
