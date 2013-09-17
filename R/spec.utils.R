@@ -130,11 +130,16 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
     spec.file.ext <- settings.file$options$spec.file.ext
   }
   
+  # Custom output file extension
+  if (!is.null(settings.file$options$output.file.ext)){
+    output.file.ext <- settings.file$options$output.file.ext
+  }
+  
   # Run appropriate function for meta-data extraction
-  do.call(paste("extract.metadata",tolower(instrument),sep="."),args = list(file.dir,out.dir,
-                                                                            spec.file.ext,
-                                                                            output.file.ext,
-                                                                            tz,intern))
+  do.call(paste("extract.metadata",tolower(instrument),sep="."),args = list(file.dir=file.dir,out.dir=out.dir,
+                                                                            spec.file.ext=spec.file.ext,
+                                                                            output.file.ext=output.file.ext,
+                                                                            tz=tz,intern=intern))
 }
 #==================================================================================================#
 
@@ -539,23 +544,24 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
   
   # Create output
   out.head <- c("Spectra_File_Name","File_Version","Program_Version","Spec_File_Version",
-                "Instrument_Type","Instrument_Number","Calibration_Series","DC_Correction","DC_Time_UTC",
-                "WRef_Time_UTC","Spectrum_Time_UTC","Spectrum_DOY","Spectrum_Data_Type","Spectrum_Data_Format",
-                "Calibrated_Starting_Wavelength","Calibrated_Wavelength_Step","Detector_Channels",
-                "Integration_Time_ms","SWIR1_Gain","SWIR2_Gain","SWIR1_Offset","SWIR2_Offset",
-                "VNIR_SWIR1_Splice","SWIR1_SWIR2_Splice","DC_Value","Num_DC_Measurements",
-                "Num_WRef_Measurements","Num_Sample_Measurements","Foreoptic_Deg",
-                "Inst_Dynamic_Range","Cal_Bulb_Number","Comments")
+                "Instrument_Type","Instrument_Number","Calibration_Series","Inst_Dynamic_Range",
+                "Cal_Bulb_Number","DC_Correction","DC_Time_UTC","WRef_Time_UTC","Spectrum_Time_UTC",
+                "Spectrum_DOY","Spectrum_Data_Type","Spectrum_Data_Format","Calibrated_Starting_Wavelength",
+                "Calibrated_Wavelength_Step","Detector_Channels","Integration_Time_ms","SWIR1_Gain",
+                "SWIR2_Gain","SWIR1_Offset","SWIR2_Offset","VNIR_SWIR1_Splice","SWIR1_SWIR2_Splice",
+                "DC_Value","Num_DC_Measurements","Num_WRef_Measurements","Num_Sample_Measurements",
+                "Foreoptic_Deg","Comments")
   out.metadata <- data.frame(asd.files.names,file.ver,program.ver,spec.file.ver,inst.type,inst.number,
-                             calib.series,dc.corr,dc.time,wref.time,spec.date,spec.doy,data.type,data.format,
-                             ch1.wavelength,wavelength.step,channels,int.time,swir1.gain,swir2.gain,
-                             swir1.offset,swir2.offset,splice1,splice2,dcc.value,dc.count,ref.count,
-                             sample.count,foreoptic.deg,dyn.range,bulb,comments)
+                             calib.series,dyn.range,bulb,dc.corr,dc.time,wref.time,spec.date,spec.doy,
+                             data.type,data.format,ch1.wavelength,wavelength.step,channels,int.time,
+                             swir1.gain,swir2.gain,swir1.offset,swir2.offset,splice1,splice2,dcc.value,
+                             dc.count,ref.count,sample.count,foreoptic.deg,comments)
   names(out.metadata) <- out.head
   
   if (intern){
     return(out.metadata)
   } else {
+    if (!file.exists(out.dir)) dir.create(out.dir, recursive=TRUE)
     write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
               row.names=FALSE)
   }
@@ -570,18 +576,20 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
-extract.metadata.se <- function(file.dir,out.dir,in.file.ext,output.file.ext){
+extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,tz,intern){
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
   # Check for custom output file extension
-  if (is.null(in.file.ext)) {
-    in.file.ext <- ".sed"
+  if (is.null(spec.file.ext)) {
+    spec.file.ext <- ".sed"
   } else {
-    in.file.ext <- in.file.ext
+    spec.file.ext <- spec.file.ext
   }
   
-  print("Processing file(s)")
+  if (intern==FALSE){
+    print("------- Processing file(s) -------")
+  }
   
   out.head <- c("File_Name","Instrument","Detectors","Measurement", "Date", "Time", "Temperature",
                 "Battery_Voltage","Averages","Integration","Dark_Mode","Radiometric_Calibration")
@@ -589,9 +597,9 @@ extract.metadata.se <- function(file.dir,out.dir,in.file.ext,output.file.ext){
   # Determine if running on single file or directory
   check <- file.info(file.dir)
   if (check$isdir) {
-    se.files.names <- list.files(path=file.dir,pattern=in.file.ext,full.names=FALSE)
+    se.files.names <- list.files(path=file.dir,pattern=spec.file.ext,full.names=FALSE)
     se.files.names <- unlist(strsplit(se.files.names,".sed"))
-    se.files <- list.files(path=file.dir,pattern=in.file.ext,full.names=TRUE)
+    se.files <- list.files(path=file.dir,pattern=spec.file.ext,full.names=TRUE)
     out.file.name <- "Spectra"
     
   } else {
@@ -606,7 +614,12 @@ extract.metadata.se <- function(file.dir,out.dir,in.file.ext,output.file.ext){
   inst <- rep(NA,length(se.files));detec <- rep(NA,length(se.files));meas <- rep(NA,length(se.files))
   date <- rep(NA,length(se.files));time <- rep(NA,length(se.files));temp <- rep(NA,length(se.files))
   batt <- rep(NA,length(se.files));avg <- rep(NA,length(se.files));int <- rep(NA,length(se.files))
-  dm <- rep(NA,length(se.files)); radcal <- rep(NA,length(se.files))
+  dm <- rep(NA,length(se.files));radcal <- rep(NA,length(se.files));foreoptic <- rep(NA,length(se.files))
+  units <- rep(NA,length(se.files));wave.range <- rep(NA,length(se.files));lat <- rep(NA,length(se.files))
+  long <- rep(NA,length(se.files));alt <- rep(NA,length(se.files));GPS.time <- rep(NA,length(se.files))
+  satellites <- rep(NA,length(se.files));cal.ref.cor.file <- rep(NA,length(se.files))
+  channels <- rep(NA,length(se.files));data.columns <- rep(NA,length(se.files))
+  refl.units <- rep(NA,length(se.files))
   
   # Run metadata extraction
   for (i in 1:length(se.files)){
@@ -624,16 +637,41 @@ extract.metadata.se <- function(file.dir,out.dir,in.file.ext,output.file.ext){
     avg[i] <- gsub(" ","",(strsplit(file.head[11],":")[[1]])[2])
     int[i] <- gsub(" ","",(strsplit(file.head[12],":")[[1]])[2])
     dm[i] <- gsub(" ","",(strsplit(file.head[13],":")[[1]])[2])
+    foreoptic[i] <- gsub(" ","",(strsplit(file.head[14],":")[[1]])[2])
     radcal[i] <- gsub(" ","",(strsplit(file.head[15],":")[[1]])[2])
+    units[i] <- gsub(" ","",(strsplit(file.head[16],":")[[1]])[2])
+    wave.range[i] <- gsub(" ","",(strsplit(file.head[17],":")[[1]])[2])
+    lat[i] <- gsub(" ","",(strsplit(file.head[18],":")[[1]])[2])
+    long[i] <- gsub(" ","",(strsplit(file.head[19],":")[[1]])[2])
+    alt[i] <- gsub(" ","",(strsplit(file.head[20],":")[[1]])[2])
+    GPS.time[i] <- paste(gsub(" ","",(strsplit(file.head[21],":")[[1]])[2:4]),sep="",collapse=":")
+    satellites[i] <- gsub(" ","",(strsplit(file.head[22],":")[[1]])[2])
+    cal.ref.cor.file[i] <- gsub(" ","",(strsplit(file.head[23],":")[[1]])[2])
+    channels[i] <- gsub(" ","",(strsplit(file.head[24],":")[[1]])[2])
+    data.columns[i] <- gsub("[^0-9]", "", strsplit(file.head[25],":")[[1]])
+    
+    temp <- read.table(se.files[i],skip=data.line,nrows=1,sep="\t")
+    temp2 <- apply(temp, 1, function(x) pmatch("Reflect",x)) 
+    temp3 <- gsub("Reflect.", "", temp[temp2])
+    if (temp3=="%"){
+      refl.units[i] <- "Percent"
+    } else {
+      refl.units[i] <- "0-1"
+    }
     rm(data.line,file.head)
   }
-  
+
   # Create output
   out.metadata <- data.frame(se.files.names,inst,detec,meas,date,time,temp,batt,avg,int,dm,radcal)
   names(out.metadata) <- out.head
   
-  write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
-            row.names=FALSE)
+  if (intern){
+    return(out.metadata)
+  } else {
+    if (!file.exists(out.dir)) dir.create(out.dir, recursive=TRUE)
+    write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
+              row.names=FALSE)
+  }
   
 }
 #==================================================================================================#

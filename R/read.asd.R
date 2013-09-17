@@ -37,8 +37,8 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
     stop("No input file directory given in settings file or function call.")
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
-  } else if (!is.null(settings.file$asd.dir)){
-    file.dir <- settings.file$asd.dir
+  } else if (!is.null(settings.file$spec.dir)){
+    file.dir <- settings.file$spec.dir
   } 
     
   ### Define wavelengths
