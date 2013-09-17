@@ -1,5 +1,6 @@
 export(average.spec)
 export(concat.spectra)
+export(extract.metadata)
 export(import.asd)
 export(jump.correction)
 export(read.asd)

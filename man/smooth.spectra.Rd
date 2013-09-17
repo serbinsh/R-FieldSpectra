@@ -23,8 +23,8 @@ single spectrum or array of spectral observations in row-major format.}
   file.  If not set then the original filename(s) will be
   modified with the .sg suffix.}
 
-  \item{header}{Does the spectra file(s) have a header
-  line? Default = TRUE}
+  \item{header}{logical. Does the spectra file(s) have a
+  header line? Default = TRUE}
 
   \item{p}{SG filter order.  Default 1.}
 

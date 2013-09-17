@@ -28,8 +28,8 @@ single spectrum or directory of spectral observations.}
   \item{out.file.ext}{option to set the output extension.
   Defaults to ".csv"}
 
-  \item{header}{TRUE/FALSE. Do/does the file(s) have a
-  header line?}
+  \item{header}{logical. Do/does the file(s) have a header
+  line?}
 }
 \description{
   Transpose spectra file(s) from/to row or column major

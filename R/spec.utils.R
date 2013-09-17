@@ -60,15 +60,14 @@ settings <- function(input.file=NULL){
 ##' @title Extract metadata for each spectra sample.  Works on a single spectra or a directory.
 ##' 
 ##' @param file.dir File directory or filename of single spectra for processing
-##' @param out.dir Output directory for meta-data information file
-##' @param instrument What instrument was used to collect spectra.  Options: ASD, SE
+##' @param out.dir Output directory for metadata information file
+##' @param instrument What instrument was used to collect spectra.  Current options: ASD, SE
 ##' @param spec.file.ext [Optional] Input spectra file extension. E.g. .asd (ASD) or .sed (Spectral Evolution).
 ##' Default for ASD instruments is .asd.  Default for Spectral Evolution instruments is .sed
-##' @param output.file.ext [Optional] Output file extension of meta-data information file. Default .csv
-##' @param tz [Optional] Set the timezone of the spectra file collection.  Used to output actual 
-##' time (in UTC) of spectra collection.  If unused it is assumed that the correct timezone is the current
-##' system timezone.
-##' @param intern [Optional] keep meta-data output as an internal object (TRUE) or write to file (FALSE)
+##' @param output.file.ext [Optional] Output file extension of metadata information file. Default .csv
+##' @param tz [Optional] Set the timezone of the spectra file collection.  Used to covert spectra collection 
+##' time to UTC.  If unused it is assumed that the correct timezone is the current system timezone.
+##' @param intern logical. [Optional] Keep meta-data output as an internal object (TRUE) or write to file (FALSE)
 ##' @param settings.file [Optional] Spectral settings file
 ##' 
 ##' @export
@@ -84,7 +83,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   # Input directory
   if (is.null(settings.file) && is.null(file.dir)){
     print("*********************************************************************************")
-    stop("******* ERROR: No input file or directory given in settings file or function call. *******")
+    stop("ERROR: No input file or directory given in settings file or function call.")
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
   } else if (!is.null(settings.file$spec.dir)){
@@ -94,7 +93,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   # Output directory
   if (is.null(settings.file) && is.null(out.dir) && intern==FALSE) { 
     print("*********************************************************************************")
-    stop("******* ERROR: No output directory given in settings file or function call. *******")          
+    stop("ERROR: No output directory given in settings file or function call.")          
   } else if (!is.null(out.dir)){
     out.dir <- out.dir
   } else if (!is.null(settings.file$output.dir)){
@@ -104,7 +103,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   # Instrument
   if (is.null(settings.file) && is.null(instrument) && is.null(spec.file.ext)){ 
     print("*********************************************************************************")
-    stop("******* ERROR: No instrument defined in settings file or function call. *******")
+    stop("ERROR: No instrument defined in settings file or function call.")
   } else if (!is.null(instrument)){
     instrument <- instrument
   } else if (!is.null(settings.file$instrument$name)){
@@ -123,8 +122,8 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
     print("*********************************************************************************")
     if(instrument=="ASD") (spec.file.ext=".asd")
     if(instrument=="SE") (spec.file.ext=".sed")
-    warning("******* WARNING: No input file extension defined in settings file or function call. *******")
-    warning(paste("******* WARNING: Using default: *", spec.file.ext," *******",sep="") )
+    warning("WARNING: No input file extension defined in settings file or function call.")
+    warning(paste0("WARNING: Using default: ", spec.file.ext) )
   } else if (!is.null(spec.file.ext)){
     spec.file.ext <- spec.file.ext
   } else if (!is.null(settings.file$options$spec.file.ext)){
@@ -149,10 +148,9 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
 ##' @param spec.file.ext [Optional] Input spectra file extension. E.g. .asd (ASD) or .sed (Spectral Evolution).
 ##' Default for ASD instruments is .asd.  Default for Spectral Evolution instruments is .sed
 ##' @param output.file.ext [Optional] Output file extension of meta-data information file. Default .csv
-##' @param tz [Optional] Set the timezone of the spectra file collection.  Used to output actual 
-##' time (in UTC) of spectra collection.  If unused it is assumed that the correct timezone is the current
-##' system timezone.
-##' @param intern [Optional] Keep meta-data output as an internal object (TRUE) or write to file (FALSE)
+##' @param tz [Optional] Set the timezone of the spectra file collection.  Used to covert spectra collection 
+##' time to UTC.  If unused it is assumed that the correct timezone is the current system timezone.
+##' @param intern logical. [Optional] Keep meta-data output as an internal object (TRUE) or write to file (FALSE)
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
@@ -167,8 +165,10 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     spec.file.ext <- spec.file.ext
   }
   
-  print("Processing file(s)")
-  
+  if (intern==FALSE){
+    print("------- Processing file(s) -------")
+  }
+
   # Determine if running on single file or directory
   check <- file.info(file.dir)
   if (check$isdir) {
@@ -187,7 +187,6 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
   
   # Define locations in file header
   # Defined using Indico Version 8 File Format Standards (http://support.asdi.com/Document/Viewer.aspx?id=95)
-  
   ## offset to get to structure
   offsets <- c(0,3,160,178,179,181,182,186,187,191,195,199,200,201,202,203,204,206,
                334,390,394,396,398,400,402,406,410,414,418,420,421,425,427,429,431,
@@ -204,6 +203,16 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
   spec.date <- rep(paste(as.Date("1970-01-01"), "01:01:01",sep=" "),length(asd.files))
   program.ver <- rep(NA,length(asd.files));spec.file.ver <- rep(NA,length(asd.files));dc.corr <- rep(NA,length(asd.files))
   dc.time <- rep(NA,length(asd.files));ref.time <- rep(NA,length(asd.files));data.type <- rep(NA,length(asd.files))
+  ch1.wavelength <- rep(NA,length(asd.files));wavelength.step <- rep(NA,length(asd.files));data.format <- rep(NA,length(asd.files))
+  old.dc.count <- rep(NA,length(asd.files));old.ref.count <- rep(NA,length(asd.files)); old.sample.count <- rep(NA,length(asd.files))
+  channels <- rep(NA,length(asd.files));int.time <- rep(NA,length(asd.files));foreoptic.deg <- rep(NA,length(asd.files))
+  dcc.value <- rep(NA,length(asd.files));calib.series <- rep(NA,length(asd.files));inst.number <- rep(NA,length(asd.files))
+  ymin <- rep(NA,length(asd.files));ymax <- rep(NA,length(asd.files));xmin <- rep(NA,length(asd.files));xmax <- rep(NA,length(asd.files))
+  dyn.range <- rep(NA,length(asd.files));xmode <- rep(NA,length(asd.files));flags <- rep(NA,length(asd.files))
+  dc.count <- rep(NA,length(asd.files));ref.count <- rep(NA,length(asd.files));sample.count <- rep(NA,length(asd.files))
+  inst.type <- rep(NA,length(asd.files));bulb <- rep(NA,length(asd.files));swir1.gain <- rep(NA,length(asd.files))
+  swir2.gain <- rep(NA,length(asd.files));swir1.offset <- rep(NA,length(asd.files));swir2.offset <- rep(NA,length(asd.files))
+  splice1 <- rep(NA,length(asd.files));splice2 <- rep(NA,length(asd.files));ref.flag <- rep(NA,length(asd.files))
   
   ## Run metadata extraction
   for (i in 1:length(asd.files)){
@@ -274,6 +283,8 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     #  spec.date[i] <- as.POSIXct(date.temp)
     #}
     #spec.date[i] <- format(spec.date[i],tz="UTC",usetz=TRUE)
+    
+    rm(spec.sec,spec.min,spec.hour,spec.day,spec.month,spec.year,date.temp)
     ### ----------------------------------------------------------------------------------------
         
     seek(to.read,where=offsets[4],origin="start",rw="r") # 178,1
@@ -322,6 +333,7 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
       data.type[i] <- "abs_type"
     }
     # Spectra data type
+    rm(data.type.temp)
     
     seek(to.read,where=offsets[9],origin="start",rw="r") # 187,4
     ref.time[i] <- readBin(to.read,what=integer(),size=info.size[9],endian = .Platform$endian)
@@ -330,38 +342,39 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     # Time of last white reference, seconds since 1/1/1970
     
     seek(to.read,where=offsets[10],origin="start",rw="r") # 191,4
-    ch1.wavelength <- readBin(to.read,what=numeric(),size=info.size[10],endian = .Platform$endian)
+    ch1.wavelength[i] <- readBin(to.read,what=numeric(),size=info.size[10],endian = .Platform$endian)
     # calibrated starting wavelength in nm
     
     seek(to.read,where=offsets[11],origin="start",rw="r") # 195,4
-    wavelength.step <- readBin(to.read,what=numeric(),size=info.size[11],endian = .Platform$endian)
+    wavelength.step[i] <- readBin(to.read,what=numeric(),size=info.size[11],endian = .Platform$endian)
     # calibrated wavelength step in nm
     
     seek(to.read,where=offsets[12],origin="start",rw="r") # 199,1
-    data.format <- readBin(to.read,what=raw(),size=info.size[12],endian = .Platform$endian)
-    if (data.format==0){
-      data.format <- "float"
-    } else if (data.format==1){
-      data.format <- "integer"
-    } else if (data.format==2){
-      data.format <- "double"
-    } else if (data.format==3){
-      data.format <- "unknown"
+    data.format.temp <- readBin(to.read,what=raw(),size=info.size[12],endian = .Platform$endian)
+    if (data.format.temp==0){
+      data.format[i] <- "float"
+    } else if (data.format.temp==1){
+      data.format[i] <- "integer"
+    } else if (data.format.temp==2){
+      data.format[i] <- "double"
+    } else if (data.format.temp==3){
+      data.format[i] <- "unknown"
     }
     # format of spectrum.
+    rm(data.format.temp)
     
     seek(to.read,where=offsets[13],origin="start",rw="r") # 200,1
-    old.dc.count <- readBin(to.read,what=raw(),size=info.size[13],endian = .Platform$endian)
+    old.dc.count[i] <- as.character(readBin(to.read,what=raw(),size=info.size[13],endian = .Platform$endian))
     # Number of dark current measurements in average. old version. unused in new file format
     # use check against new version.  if old >0 then file is an older ASD file format
     
     seek(to.read,where=offsets[14],origin="start",rw="r") # 201,1
-    old.ref.count <- readBin(to.read,what=raw(),size=info.size[14],endian = .Platform$endian)
+    old.ref.count[i] <- as.character(readBin(to.read,what=raw(),size=info.size[14],endian = .Platform$endian))
     # Number of white ref measurements in average. old version. unused in new file format
     # use check against new version.  if old >0 then file is an older ASD file format
     
     seek(to.read,where=offsets[15],origin="start",rw="r") # 202,1
-    old.sample.count <- readBin(to.read,what=raw(),size=info.size[15],endian = .Platform$endian)
+    old.sample.count[i] <- as.character(readBin(to.read,what=raw(),size=info.size[15],endian = .Platform$endian))
     # Num of spec samples in the avg. old version. unused in new file format
     # use check against new version.  if old >0 then file is an older ASD file format
     
@@ -370,7 +383,7 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     # Which application created APP_DATA
     
     seek(to.read,where=offsets[17],origin="start",rw="r") # 204, 2
-    channels <- readBin(to.read,what=integer(),size=info.size[17],endian = .Platform$endian)
+    channels[i] <- readBin(to.read,what=integer(),size=info.size[17],endian = .Platform$endian)
     # Num of channels in the detector.
     
     #seek(to.read,where=offsets[18],origin="start",rw="r") # 206, 128
@@ -382,110 +395,111 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     # GPS position, course, etc.
     
     seek(to.read,where=offsets[20],origin="start",rw="r") # 390,4
-    int.time <- readBin(to.read,what=integer(),size=info.size[20],endian = .Platform$endian)
+    int.time[i] <- readBin(to.read,what=integer(),size=info.size[20],endian = .Platform$endian)
     # Actual integration time in ms
     
     seek(to.read,where=offsets[21],origin="start",rw="r") # 394,2
-    foreoptic.deg <- readBin(to.read,what=integer(),size=info.size[21],endian = .Platform$endian)
+    foreoptic.deg[i] <- readBin(to.read,what=integer(),size=info.size[21],endian = .Platform$endian)
     # The fore optic attachment's view in degrees
     
     seek(to.read,where=offsets[22],origin="start",rw="r") # 396,2
-    dcc.value <- readBin(to.read,what=integer(),size=info.size[22],endian = .Platform$endian)
+    dcc.value[i] <- readBin(to.read,what=integer(),size=info.size[22],endian = .Platform$endian)
     # The dark current correction value
     
     seek(to.read,where=offsets[23],origin="start",rw="r") # 398,2
-    calib.series <- readBin(to.read,what=integer(),size=info.size[23],endian = .Platform$endian)
+    calib.series[i] <- readBin(to.read,what=integer(),size=info.size[23],endian = .Platform$endian)
     # calibration series
     
     seek(to.read,where=offsets[24],origin="start",rw="r") # 400,2
-    inst.number <- readBin(to.read,what=integer(),size=info.size[24],endian = .Platform$endian)
+    inst.number[i] <- readBin(to.read,what=integer(),size=info.size[24],endian = .Platform$endian)
     # instrument number. i.e. serial number of unit
     
     seek(to.read,where=offsets[25],origin="start",rw="r") # 402,4
-    ymin <- readBin(to.read,what=double(),size=info.size[25],endian = .Platform$endian)
+    ymin[i] <- readBin(to.read,what=double(),size=info.size[25],endian = .Platform$endian)
     # setting of the y axis' min value
     
     seek(to.read,where=offsets[26],origin="start",rw="r") # 406,4
-    ymax <- readBin(to.read,what=double(),size=info.size[26],endian = .Platform$endian)
+    ymax[i] <- readBin(to.read,what=double(),size=info.size[26],endian = .Platform$endian)
     # setting of the y axis' min value
     
     seek(to.read,where=offsets[27],origin="start",rw="r") # 410,4
-    xmin <- readBin(to.read,what=double(),size=info.size[27],endian = .Platform$endian)
+    xmin[i] <- readBin(to.read,what=double(),size=info.size[27],endian = .Platform$endian)
     # setting of the x axis' min value
     
     seek(to.read,where=offsets[28],origin="start",rw="r") # 414,4
-    xmax <- readBin(to.read,what=double(),size=info.size[28],endian = .Platform$endian)
+    xmax[i] <- readBin(to.read,what=double(),size=info.size[28],endian = .Platform$endian)
     # setting of the x axis' min value
     
     seek(to.read,where=offsets[29],origin="start",rw="r") # 418,2
-    dyn.range <- readBin(to.read,what=integer(),size=info.size[29],endian = .Platform$endian)
+    dyn.range[i] <- readBin(to.read,what=integer(),size=info.size[29],endian = .Platform$endian)
     # instrument's dynamic range;  ip_numbits; e.g. 16bit
     
     seek(to.read,where=offsets[30],origin="start",rw="r") # 420,1
-    xmode <- readBin(to.read,what=raw(),size=info.size[30],endian = .Platform$endian)
+    xmode[i] <- as.character(readBin(to.read,what=raw(),size=info.size[30],endian = .Platform$endian))
     # x axis mode. See *_XMODE
     
     seek(to.read,where=offsets[31],origin="start",rw="r") # 421,4
-    flags <- readBin(to.read,what=numeric(),size=info.size[31],endian = .Platform$endian)
+    flags[i] <- readBin(to.read,what=numeric(),size=info.size[31],endian = .Platform$endian)
     
     seek(to.read,where=offsets[32],origin="start",rw="r") # 425,2
-    dc.count <- readBin(to.read,what=integer(),size=info.size[32],endian = .Platform$endian)
+    dc.count[i] <- readBin(to.read,what=integer(),size=info.size[32],endian = .Platform$endian)
     # number of dark current measurements in average. new version
     
     seek(to.read,where=offsets[33],origin="start",rw="r") # 427,2
-    ref.count <- readBin(to.read,what=integer(),size=info.size[33],endian = .Platform$endian)
+    ref.count[i] <- readBin(to.read,what=integer(),size=info.size[33],endian = .Platform$endian)
     # Num of WR in the average 
     
     seek(to.read,where=offsets[34],origin="start",rw="r") # 429,2
-    sample.count <- readBin(to.read,what=integer(),size=info.size[34],endian = .Platform$endian)
+    sample.count[i] <- readBin(to.read,what=integer(),size=info.size[34],endian = .Platform$endian)
     # Num of spec samples in the avg
     
     seek(to.read,where=offsets[35],origin="start",rw="r") # 431,1
-    inst.type <- readBin(to.read,what=raw(),size=info.size[35],endian = .Platform$endian)
-    if (inst.type==0){
-      inst.type <- "unknown_instrument"
-    } else if (inst.type==1) {
-      inst.type <- "PSII_instrument"
-    } else if (inst.type==2) {
-      inst.type <- "LSVNIR_instrument"
-    } else if (inst.type==3) {
-      inst.type <- "FSVNIR_instrument"
-    } else if (inst.type==4) {
-      inst.type <- "FSFR_instrument"
-    } else if (inst.type==5) {
-      inst.type <- "FSNIR_instrument"
-    } else if (inst.type==6) {
-      inst.type <- "CHEM_instrument"
-    } else if (inst.type==7) {
-      inst.type <- "FSFR_unattended_instrument"
+    inst.type.temp <- readBin(to.read,what=raw(),size=info.size[35],endian = .Platform$endian)
+    if (inst.type.temp==0){
+      inst.type[i] <- "unknown_instrument"
+    } else if (inst.type.temp==1) {
+      inst.type[i] <- "PSII_instrument"
+    } else if (inst.type.temp==2) {
+      inst.type[i] <- "LSVNIR_instrument"
+    } else if (inst.type.temp==3) {
+      inst.type[i] <- "FSVNIR_instrument"
+    } else if (inst.type.temp==4) {
+      inst.type[i] <- "FSFR_instrument"
+    } else if (inst.type.temp==5) {
+      inst.type[i] <- "FSNIR_instrument"
+    } else if (inst.type.temp==6) {
+      inst.type[i] <- "CHEM_instrument"
+    } else if (inst.type.temp==7) {
+      inst.type[i] <- "FSFR_unattended_instrument"
     }
+    rm(inst.type.temp)
     
     seek(to.read,where=offsets[36],origin="start",rw="r") # 432,4
-    bulb <- readBin(to.read,what=integer(),size=info.size[36],endian = .Platform$endian)
+    bulb[i] <- readBin(to.read,what=integer(),size=info.size[36],endian = .Platform$endian)
     # The id number of the cal bulb
     
     seek(to.read,where=offsets[37],origin="start",rw="r") # 436,2
-    swir1.gain <- readBin(to.read,what=integer(),size=info.size[37],endian = .Platform$endian)
+    swir1.gain[i] <- readBin(to.read,what=integer(),size=info.size[37],endian = .Platform$endian)
     # gain setting for swir 1
     
     seek(to.read,where=offsets[38],origin="start",rw="r") # 438,2
-    swir2.gain <- readBin(to.read,what=integer(),size=info.size[38],endian = .Platform$endian)
+    swir2.gain[i] <- readBin(to.read,what=integer(),size=info.size[38],endian = .Platform$endian)
     # gain setting for swir 2
     
     seek(to.read,where=offsets[39],origin="start",rw="r") # 440,2
-    swir1.offset <- readBin(to.read,what=integer(),size=info.size[39],endian = .Platform$endian)
+    swir1.offset[i] <- readBin(to.read,what=integer(),size=info.size[39],endian = .Platform$endian)
     # offset setting for swir 1
     
     seek(to.read,where=offsets[40],origin="start",rw="r") # 442,2
-    swir2.offset <- readBin(to.read,what=integer(),size=info.size[40],endian = .Platform$endian)
+    swir2.offset[i] <- readBin(to.read,what=integer(),size=info.size[40],endian = .Platform$endian)
     # offset setting for swir 2
     
     seek(to.read,where=offsets[41],origin="start",rw="r") # 444,4
-    splice1 <- readBin(to.read,what=numeric(),size=info.size[41],endian = .Platform$endian)
+    splice1[i] <- readBin(to.read,what=numeric(),size=info.size[41],endian = .Platform$endian)
     # wavelength of VNIR and SWIR1 splice
     
     seek(to.read,where=offsets[42],origin="start",rw="r") # 448,4
-    splice2 <- readBin(to.read,what=numeric(),size=info.size[42],endian = .Platform$endian)
+    splice2[i] <- readBin(to.read,what=numeric(),size=info.size[42],endian = .Platform$endian)
     # wavelength of SWIR1 and SWIR2 splice
     
     # ---------------------------------------------------------------------------------------
@@ -498,11 +512,12 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     # ---------------------------------------------------------------------------------------
         
     ## Attempt to gather info from reference file header
-    spectrum.data.start <- 484
-    spectrum.data.end <- spectrum.data.start+(length(seq(ch1.wavelength,ch1.wavelength+channels-1,wavelength.step)))
+    spectrum.data.start <- 484 #<-- from Indico file definition
+    spectrum.data.end <- spectrum.data.start+(length(seq(ch1.wavelength[i],ch1.wavelength[i]+channels[i]-1,
+                                                         wavelength.step[i])))
     
     seek(to.read,where=spectrum.data.end+1,origin="start",rw="r")
-    ref.flag <- readBin(to.read,what=logical(),size=2,endian = .Platform$endian)
+    ref.flag[i] <- readBin(to.read,what=logical(),size=2,endian = .Platform$endian)
     # Reference been taken. Logical: TRUE/FALSE
 
     close(to.read)
@@ -518,19 +533,24 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
   if (!is.null(tz)){
     spec.date <- as.POSIXct(spec.date,tz=tz)
   } else {
-    spec.date <- as.POSIXct(date.temp)
+    spec.date <- as.POSIXct(spec.date)
   }
   spec.date <- format(spec.date,tz="UTC",usetz=TRUE)
   
   # Create output
   out.head <- c("Spectra_File_Name","File_Version","Program_Version","Spec_File_Version",
-                "DC_Correction","DC_Time_UTC","WRef_Time_UTC","Spectrum_Time_UTC","Spectrum_DOY",
-                "Spectrum_Data_Type","Spectrum_Data_Format","Calibrated_Starting_Wavelength",
-                "Calibrated_Wavelength_Step","Comments")
-  out.metadata <- data.frame(asd.files.names,file.ver,program.ver,spec.file.ver,dc.corr,dc.time,
-                             wref.time,spec.date,spec.doy,data.type,data.format,ch1.wavelength,
-                             wavelength.step,
-                             comments)
+                "Instrument_Type","Instrument_Number","Calibration_Series","DC_Correction","DC_Time_UTC",
+                "WRef_Time_UTC","Spectrum_Time_UTC","Spectrum_DOY","Spectrum_Data_Type","Spectrum_Data_Format",
+                "Calibrated_Starting_Wavelength","Calibrated_Wavelength_Step","Detector_Channels",
+                "Integration_Time_ms","SWIR1_Gain","SWIR2_Gain","SWIR1_Offset","SWIR2_Offset",
+                "VNIR_SWIR1_Splice","SWIR1_SWIR2_Splice","DC_Value","Num_DC_Measurements",
+                "Num_WRef_Measurements","Num_Sample_Measurements","Foreoptic_Deg",
+                "Inst_Dynamic_Range","Cal_Bulb_Number","Comments")
+  out.metadata <- data.frame(asd.files.names,file.ver,program.ver,spec.file.ver,inst.type,inst.number,
+                             calib.series,dc.corr,dc.time,wref.time,spec.date,spec.doy,data.type,data.format,
+                             ch1.wavelength,wavelength.step,channels,int.time,swir1.gain,swir2.gain,
+                             swir1.offset,swir2.offset,splice1,splice2,dcc.value,dc.count,ref.count,
+                             sample.count,foreoptic.deg,dyn.range,bulb,comments)
   names(out.metadata) <- out.head
   
   if (intern){
@@ -753,7 +773,7 @@ concat.spectra <- function(file.dir=NULL,out.dir=NULL,out.filename=NULL,in.file.
 ##' the original filenames are appended with the .t suffix
 ##' @param in.file.ext file extension for individual spectra files. Defaults to ".csv"
 ##' @param out.file.ext option to set the output extension. Defaults to ".csv"
-##' @param header TRUE/FALSE. Do/does the file(s) have a header line?
+##' @param header logical. Do/does the file(s) have a header line?
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
@@ -777,7 +797,7 @@ transpose.spectra <- function(file.dir=NULL,input.file=NULL,out.dir=NULL,out.fil
 ##' spectra will be output to file.dir
 ##' @param out.filename Output filename for processed spectra file.  If not set then the original 
 ##' filename(s) will be modified with the .sg suffix.
-##' @param header Does the spectra file(s) have a header line? Default = TRUE
+##' @param header logical. Does the spectra file(s) have a header line? Default = TRUE
 ##' @param p SG filter order.  Default 1.
 ##' @param n SG filter length. Needs to be an odd value.  Default 21
 ##' @param length Apply sgolay smoothing filter to the entire (default=full) or subset of 
