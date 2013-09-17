@@ -1,3 +1,9 @@
 # TODO
 
 # 1. Update read.asd to allow for separate binary file(s) containing white standard information for converting target spectra from raw DN to %Reflectance
+
+# 2. Update code to incorperate multiple instrument processing.
+
+#3.  Complete meta-data extraction code for spectra files (ASD, SE)
+
+# 4. Enable the use of spectral meta-data to define settings for reading/processing spectral files.  E.g. wavelength range, step, splice locations, etc.
