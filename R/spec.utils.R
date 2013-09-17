@@ -149,6 +149,9 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
 ##' @param spec.file.ext [Optional] Input spectra file extension. E.g. .asd (ASD) or .sed (Spectral Evolution).
 ##' Default for ASD instruments is .asd.  Default for Spectral Evolution instruments is .sed
 ##' @param output.file.ext [Optional] Output file extension of meta-data information file. Default .csv
+##' @param tz [Optional] Set the timezone of the spectra file collection.  Used to output actual 
+##' time (in UTC) of spectra collection.  If unused it is assumed that the correct timezone is the current
+##' system timezone.
 ##' @param intern [Optional] Keep meta-data output as an internal object (TRUE) or write to file (FALSE)
 ##' 
 ##' @author Shawn P. Serbin
@@ -194,16 +197,24 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
                  4,2,2,2,1,4,2,2,2,2,4,4,27)          
   out.metadata <- data.frame(array(data=NA,dim=c(length(asd.files),length(offsets))))
   
+  # Build empty metadata vars
+  file.ver <- rep(NA,length(asd.files));comments <- rep(NA,length(asd.files));spec.dow <- rep(NA,length(asd.files))
+  spec.doy <- rep(NA,length(asd.files));daylight.savings <- rep(NA,length(asd.files));
+  #spec.date <- rep(as.POSIXct(paste(as.Date("1970-01-01"), "01:01:01",sep=" "),tz=tz),length(asd.files))
+  spec.date <- rep(paste(as.Date("1970-01-01"), "01:01:01",sep=" "),length(asd.files))
+  program.ver <- rep(NA,length(asd.files));spec.file.ver <- rep(NA,length(asd.files));dc.corr <- rep(NA,length(asd.files))
+  dc.time <- rep(NA,length(asd.files));ref.time <- rep(NA,length(asd.files));data.type <- rep(NA,length(asd.files))
+  
   ## Run metadata extraction
   for (i in 1:length(asd.files)){
-    to.read <- file(file.dir,"rb")
+    to.read <- file(asd.files[i],"rb")
     
     seek(to.read,where=offsets[1],origin="start",rw="r") # 0,3
-    file.ver <- readBin(to.read,what=character(),size=info.size[1],endian = .Platform$endian)
+    file.ver[i] <- readBin(to.read,what=character(),size=info.size[1],endian = .Platform$endian)
     # File Version - as6
     
     seek(to.read,where=offsets[2],origin="start",rw="r") #3,157
-    comments <- readBin(to.read,what=character(),size=info.size[2],endian = .Platform$endian)
+    comments[i] <- readBin(to.read,what=character(),size=info.size[2],endian = .Platform$endian)
     # comment field
     
     ### Spectra time/date collection info chunk -------------------------------------------------
@@ -241,79 +252,81 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     # years since 1900.  example: 113 --> 1900+113=2013
     
     seek(to.read,where=offsets[3]+12,origin="start",rw="r") # 172,2
-    spec.dow <- readBin(to.read,what=integer(),size=2,endian = .Platform$endian)
+    spec.dow[i] <- readBin(to.read,what=integer(),size=2,endian = .Platform$endian)
     # day of week [0,6] (Sunday = 0). 0 Sun, 1 Mon, 2 Tues, 3 Wed, 4 Thurs, 5 Fri, 6 Sat
     
     seek(to.read,where=offsets[3]+14,origin="start",rw="r") # 174,2
-    spec.doy <- readBin(to.read,what=integer(),size=2,endian = .Platform$endian)
+    spec.doy[i] <- readBin(to.read,what=integer(),size=2,endian = .Platform$endian)
     # day of year [0,365]
     
     seek(to.read,where=offsets[3]+16,origin="start",rw="r") # 176,2
-    daylight.savings <- readBin(to.read,what=integer(),size=2,endian = .Platform$endian)
+    daylight.savings[i] <- readBin(to.read,what=integer(),size=2,endian = .Platform$endian)
     # daylight savings flag. 1 TRUE 0 FALSE
     
     # Convert to date/time string
     date.temp <- paste(as.Date(paste(spec.year,spec.month,spec.day,sep="-")),
                        paste(spec.hour,spec.min,spec.sec,sep=":"))
-    if (!is.null(tz)){
-      spec.date <- as.POSIXct(date.temp,tz=tz)
-    } else {
-      spec.date <- as.POSIXct(date.temp)
-    }
-    spec.date <- format(spec.date,tz="UTC",usetz=TRUE)
+    spec.date[i] <- date.temp
+    # move this down
+    #if (!is.null(tz)){
+    #  spec.date[i] <- as.POSIXct(date.temp,tz=tz)
+    #} else {
+    #  spec.date[i] <- as.POSIXct(date.temp)
+    #}
+    #spec.date[i] <- format(spec.date[i],tz="UTC",usetz=TRUE)
     ### ----------------------------------------------------------------------------------------
         
     seek(to.read,where=offsets[4],origin="start",rw="r") # 178,1
-    program.ver <- readBin(to.read,what=raw(),size=info.size[4],endian = .Platform$endian)
+    program.ver[i] <- as.character(readBin(to.read,what=raw(),size=info.size[4],endian = .Platform$endian))
     # ver. of the program creating this file. major ver in upper nibble, min in lower 
     
     seek(to.read,where=offsets[5],origin="start",rw="r") # 179,1
-    spec.file.ver <- readBin(to.read,what=raw(),size=info.size[5],endian = .Platform$endian)
+    spec.file.ver[i] <- as.character(readBin(to.read,what=raw(),size=info.size[5],endian = .Platform$endian))
     # spectrum file format version
     
     seek(to.read,where=offsets[6],origin="start",rw="r") # 181, 1
-    dc.corr <- readBin(to.read,what=raw(),size=info.size[6],endian = .Platform$endian)
-    if (dc.corr=="01"){
-      dc.corr <- "yes"
+    dc.corr[i] <- as.character(readBin(to.read,what=raw(),size=info.size[6],endian = .Platform$endian))
+    if (dc.corr[i]=="01"){
+      dc.corr[i] <- "yes"
     } else {
-      dc.corr <- "no"
+      dc.corr[i] <- "no"
     }
     # 1 if DC subtracted, 0 if not
     
     seek(to.read,where=offsets[7],origin="start",rw="r") # 182,4
-    dc.time <- readBin(to.read,what=integer(),size=info.size[7],endian = .Platform$endian)
+    dc.time[i] <- readBin(to.read,what=integer(),size=info.size[7],endian = .Platform$endian)
     # seconds since 1/1/1970
     #dc.time <- as.Date(as.POSIXct(dc.time, origin="1970-01-01", tz = "GMT")) #just date
-    dc.time <- as.POSIXct(dc.time, origin="1970-01-01", tz = "GMT") # date and time
+    #dc.time <- as.POSIXct(dc.time, origin="1970-01-01", tz = "UTC") # date and time --> moved down
     # Time of last dc, seconds since 1/1/1970
     
     seek(to.read,where=offsets[8],origin="start",rw="r") # 186,1
-    data.type <- readBin(to.read,what=raw(),size=info.size[8],endian = .Platform$endian)
-    if (data.type==0) {
-      data.type <- "raw_type"
-    } else if (data.type==1) {
-      data.type <- "refl_type"
-    } else if (data.type==2) {
-      data.type <- "rad_type"
-    } else if (data.type==3) {
-      data.type <- "nounits_type"
-    } else if (data.type==4) {
-      data.type <- "nounits_type"
-    } else if (data.type==5) {
-      data.type <- "qi_type"
-    } else if (data.type==6) {
-      data.type <- "trans_type"
-    } else if (data.type==7) {
-      data.type <- "unknown_type"
-    } else if (data.type==8) {
-      data.type <- "abs_type"
+    data.type.temp <- readBin(to.read,what=raw(),size=info.size[8],endian = .Platform$endian)
+    if (data.type.temp==0) {
+      data.type[i] <- "raw_type"
+    } else if (data.type.temp==1) {
+      data.type[i] <- "refl_type"
+    } else if (data.type.temp==2) {
+      data.type[i] <- "rad_type"
+    } else if (data.type.temp==3) {
+      data.type[i] <- "nounits_type"
+    } else if (data.type.temp==4) {
+      data.type[i] <- "nounits_type"
+    } else if (data.type.temp==5) {
+      data.type[i] <- "qi_type"
+    } else if (data.type.temp==6) {
+      data.type[i] <- "trans_type"
+    } else if (data.type.temp==7) {
+      data.type[i] <- "unknown_type"
+    } else if (data.type.temp==8) {
+      data.type[i] <- "abs_type"
     }
     # Spectra data type
     
     seek(to.read,where=offsets[9],origin="start",rw="r") # 187,4
-    ref.time <- readBin(to.read,what=integer(),size=info.size[9],endian = .Platform$endian)
+    ref.time[i] <- readBin(to.read,what=integer(),size=info.size[9],endian = .Platform$endian)
     # seconds since 1/1/1970 of last white reference
-    wref.time <- as.POSIXct(ref.time, origin="1970-01-01", tz = "GMT") # date and time
+    #wref.time <- as.POSIXct(ref.time, origin="1970-01-01", tz = "UTC") # date and time --> moved down
     # Time of last white reference, seconds since 1/1/1970
     
     seek(to.read,where=offsets[10],origin="start",rw="r") # 191,4
@@ -495,6 +508,19 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     close(to.read)
     
   }
+  
+  # Convert date/times to proper output format
+  dc.time <- as.POSIXct(dc.time, origin="1970-01-01", tz = "UTC") # date and time in UTC
+  dc.time <- format(dc.time,tz="UTC",usetz=TRUE)
+  wref.time <- as.POSIXct(ref.time, origin="1970-01-01", tz = "UTC") # date and time
+  wref.time <- format(wref.time,tz="UTC",usetz=TRUE)
+  
+  if (!is.null(tz)){
+    spec.date <- as.POSIXct(spec.date,tz=tz)
+  } else {
+    spec.date <- as.POSIXct(date.temp)
+  }
+  spec.date <- format(spec.date,tz="UTC",usetz=TRUE)
   
   # Create output
   out.head <- c("Spectra_File_Name","File_Version","Program_Version","Spec_File_Version",
