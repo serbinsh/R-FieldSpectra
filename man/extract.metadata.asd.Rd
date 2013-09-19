@@ -1,6 +1,6 @@
 \name{extract.metadata.asd}
 \alias{extract.metadata.asd}
-\title{Extract metadata from raw binary ASD files}
+\title{Extract metadata from raw binary ASD files. Called from extract.metadata}
 \usage{
   extract.metadata.asd(file.dir, out.dir, spec.file.ext,
     output.file.ext, tz, intern)
@@ -29,7 +29,8 @@
   as an internal object (TRUE) or write to file (FALSE)}
 }
 \description{
-  Extract metadata from raw binary ASD files
+  Extract metadata from raw binary ASD files. Called from
+  extract.metadata
 }
 \author{
   Shawn P. Serbin

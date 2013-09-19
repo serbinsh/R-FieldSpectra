@@ -1,4 +1,4 @@
 .DS_Store
-.Rbuildignore
+#.Rbuildignore
 .Rhistory
 .Rproj.user
