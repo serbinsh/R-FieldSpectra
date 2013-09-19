@@ -39,6 +39,15 @@
   Extract metadata for each spectra sample.  Works on a
   single spectra or a directory.
 }
+\examples{
+# ASD
+file <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
+extract.metadata(file,instrument="ASD",intern=TRUE)
+
+# Spectral Evolution
+file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpec")
+extract.metadata(file,instrument="SE",intern=TRUE)
+}
 \author{
   Shawn P. Serbin
 }
