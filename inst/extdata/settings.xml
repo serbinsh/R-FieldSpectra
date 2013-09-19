@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <settings>
   <!-- Directory of ASD files or sub-directories to process -->
-  <asd.dir>PATH TO ASD FILES</asd.dir>
+  <spec.dir>PATH TO SPECTRA FILES</spec.dir>
   <!-- Main output directory -->
   <output.dir>PATH TO OUTPUT</output.dir>
   <instrument>

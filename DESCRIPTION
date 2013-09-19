@@ -1,14 +1,14 @@
 Package: FieldSpec
 Type: Package
-Title: Functions useful for processing field spectroscopy data
+Title: Functions for processing field spectroscopy data
 Version: 0.89
-Date: 2013-09-17
+Date: 2013-09-18
 Author: Shawn P. Serbin
 Maintainer: Shawn P. Serbin <serbin@wisc.edu>
 Description: A field spectroscopy package containing functions to process
     spectral files collected with an Analytical Spectral Devices (ASD) or
-    Spectral Evolution instrument. The goal is to stream line and standardize
-    spectral data processing for use in ecology, remote sensing, and plant
+    Spectral Evolution instrument. The goal is to streamline and standardize
+    spectral data processing for use in remote sensing, ecology, and plant
     ecophysiological research.
 Depends:
     XML,

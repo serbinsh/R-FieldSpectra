@@ -27,9 +27,12 @@ settings <- settings('/Users/serbin/Data/Dropbox/SoyFACE/R_Spectra_Training/SoyF
 #--------------------------------------------------------------------------------------------------#
 # Run each function separately
 
+### Get metadata
+metadata <- extract.metadata(settings.file=settings,intern=TRUE)
+
 ### Import ASD binary files to ASCII format
-read.asd(settings.file=settings,spec.dataframe = FALSE)   # Using settings file
-spectra <- read.asd(settings.file=settings,spec.dataframe = TRUE) # output a dataframe with the spectra
+read.asd(settings.file=settings)   # Using settings file
+spectra <- read.asd(settings.file=settings) # output a dataframe with the spectra
 
 # Look at spectra
 plot(seq(350,2500,1),spectra[2,2:dim(spectra)[2]],type="l")

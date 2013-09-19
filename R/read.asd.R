@@ -199,9 +199,7 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
     
     ### Close progress bar
     close(pb)
-    
-    ### Return spectra data object if requested i.e. spec.dataframe=TRUE
-    
+        
   } else {
     to.read <- file(file.dir, "rb")
     
