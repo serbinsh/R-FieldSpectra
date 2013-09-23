@@ -18,6 +18,14 @@
 ##' and processing options such as applying a jump correction to the spectra files.  Options in the settings
 ##' file take precedent over options selected in the function call.
 ##'
+##'@examples
+##' file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
+##' spec <- read.asd(file.dir,out.dir='~',start.wave=350,end.wave=2500,step.size=1)
+##' 
+##' # Plot output
+##' plot(spec$Wavelength,spec$Spectra,type="l",lwd=2,xlab="Wavelength (nm)", ylab="Reflectance (%)")
+##' 
+##' 
 ##' @export
 ##' 
 ##' @return output for a single file returns a list with wavelengths and measured reflectance or transmittance 
@@ -26,15 +34,15 @@
 ##' 
 ##' @author Shawn P. Serbin
 ##'
-read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL, step.size=NULL, image=FALSE, asd.file.ext=".asd",
-                    output.file.ext=".csv", settings.file=NULL){
+read.asd <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,step.size=NULL,image=FALSE, 
+                    asd.file.ext=".asd",output.file.ext=".csv",settings.file=NULL){
 
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
   ### Check for proper input
   if (is.null(settings.file) && is.null(file.dir)){
-    stop("No input file directory given in settings file or function call.")
+    stop("No input file directory given in settings file or function call.  Please correct.")
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
   } else if (!is.null(settings.file$spec.dir)){
@@ -43,32 +51,39 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
     
   ### Define wavelengths
   if (is.null(settings.file) && is.null(start.wave)){
-    stop(paste0("No starting wavelength set in settings file or in function call. Starting Wavelength is: ", start.wave))
-  } else if (!is.null(settings.file$instrument$start.wave)){
-    start.wave <- as.numeric(settings.file$instrument$start.wave)
+    #stop(paste0("No starting wavelength set in settings file or in function call. Starting Wavelength is: ", start.wave))
+    use.metadata.start.wave <- TRUE
   } else if (!is.null(start.wave)){
     start.wave <- start.wave
+  } else if (!is.null(settings.file$instrument$start.wave)){
+    start.wave <- as.numeric(settings.file$instrument$start.wave)
   }
   
   if (is.null(settings.file) && is.null(end.wave)){
-    stop(paste0("No ending wavelength set in settings file or in function call. Ending Wavelength is: ", end.wave))
-  } else if (!is.null(settings.file$instrument$end.wave)){
-    end.wave <- as.numeric(settings.file$instrument$end.wave)
+    #stop(paste0("No ending wavelength set in settings file or in function call. Ending Wavelength is: ", end.wave))
+    use.metadata.end.wave <- TRUE
   } else if (!is.null(end.wave)){
     end.wave <- end.wave
+  } else if (!is.null(settings.file$instrument$end.wave)){
+    end.wave <- as.numeric(settings.file$instrument$end.wave)
   }
   
   if (is.null(settings.file) && is.null(step.size)){
-      warning("No wavelength step size give in settings file or in function call. Setting to 1nm by default")
-  } else if (!is.null(settings.file$instrument$step.size)){
-    step.size <- as.numeric(settings.file$instrument$step.size)
+      #warning("No wavelength step size give in settings file or in function call. Setting to 1nm by default")
+    use.metadata.step.size <- TRUE
   } else if (!is.null(step.size)){
     step.size <- step.size
+  } else if (!is.null(settings.file$instrument$step.size)){
+    step.size <- as.numeric(settings.file$instrument$step.size)
   }
   
   ### Define wavelength numbers for processing/output based on defined start/end wavelengths and step size
-  lambda <- seq(start.wave, end.wave, step.size)
-  
+  if (!is.null(start.wave) && !is.null(end.wave) && !is.null(step.size)){
+    lambda <- seq(start.wave, end.wave, step.size) 
+  } else {
+    use.metadata.lambda <- TRUE
+  }
+
   ### create output directory if it doesn't already exist
   if (!is.null(out.dir)) {
     out.dir <- out.dir
@@ -98,6 +113,17 @@ read.asd = function(file.dir=NULL, out.dir=NULL, start.wave=NULL, end.wave=NULL,
     ### Get file list
     asd.files <- list.files(path=file.dir, pattern=asd.file.ext, full.names=FALSE)
     asd.files.full <- list.files(path=file.dir, pattern=asd.file.ext, full.names=TRUE)
+    
+    # Get spec dimensions for spec dataframe
+    if (is.null(start.wave)){
+      start.wave <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",intern=TRUE)$Calibrated_Starting_Wavelength
+    } else if (is.null(step.size)) {
+      step.size <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",intern=TRUE)$Calibrated_Wavelength_Step
+    } else if (is.null(end.wave)) {
+      channels <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",intern=TRUE)$Detector_Channels
+      end.wave <- start.wave+((channels-1)/step.size)
+    } 
+    # lambda <- seq(start.wave, end.wave, step.size)
     
     ### Setup progress bar
     j <- 1 # <--- Numeric counter for progress bar
