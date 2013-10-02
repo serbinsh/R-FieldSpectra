@@ -116,9 +116,11 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   } else if (!is.null(instrument)){
     instrument <- instrument
   } else if (!is.null(settings.file$instrument$name)){
-    inst <- c("ASD","ASD","ASD","SE","SE","SE")
+    inst <- c("ASD","ASD","ASD","SE","SE","SE","SE","SE","SE")
     temp <- tolower(settings.file$instrument$name)
-    index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
+    #index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
+    index <- agrep(pattern=temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","spectral evolution psm-3500",
+                                        "evolution","psm-3500","psm 3500"),max=5,ignore.case = TRUE)
     instrument <- inst[index]
   } else if (spec.file.ext==".asd") {
     instrument <- "ASD"
@@ -657,6 +659,7 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     alt[i] <- gsub(" ","",(strsplit(file.head[20],":")[[1]])[2])
     GPS.time[i] <- paste(gsub(" ","",(strsplit(file.head[21],":")[[1]])[2:4]),sep="",collapse=":")
     satellites[i] <- gsub(" ","",(strsplit(file.head[22],":")[[1]])[2])
+    satellites[i] <- gsub("/"," of ",x=satellites[i])
     cal.ref.cor.file[i] <- gsub(" ","",(strsplit(file.head[23],":")[[1]])[2])
     channels[i] <- gsub(" ","",(strsplit(file.head[24],":")[[1]])[2])
     data.columns[i] <- gsub("[^0-9]", "", strsplit(file.head[25],":")[[1]])
