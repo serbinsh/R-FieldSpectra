@@ -67,32 +67,32 @@ settings <- function(input.file=NULL){
 ##' @param output.file.ext [Optional] Output file extension of metadata information file. Default .csv
 ##' @param tz [Optional] Set the timezone of the spectra file collection.  Used to covert spectra collection 
 ##' time to UTC.  If unused it is assumed that the correct timezone is the current system timezone.
-##' @param intern logical. [Optional] Keep meta-data output as an internal object (TRUE) or write to file (FALSE)
 ##' @param settings.file [Optional] Spectral settings file
+##' 
+##' @return output Returns a dataframe of spectral metadata information
 ##' 
 ##' @export
 ##' 
 ##' @examples
 ##' # ASD
 ##' file <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
-##' extract.metadata(file,instrument="ASD",intern=TRUE)
+##' output <- extract.metadata(file,instrument="ASD")
 ##' 
 ##' # Spectral Evolution
 ##' file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpec")
-##' extract.metadata(file,instrument="SE",intern=TRUE)
+##' output <- extract.metadata(file,instrument="SE")
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
 extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.file.ext=NULL,
-                             output.file.ext=".csv",tz=NULL,intern=FALSE,settings.file=NULL){
+                             output.file.ext=".csv",tz=NULL,settings.file=NULL){
   
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
   # Input directory
   if (is.null(settings.file) && is.null(file.dir)){
-    print("*********************************************************************************")
-    stop("ERROR: No input file or directory given in settings file or function call.")
+    stop("No input file or directory given in settings file or function call.")
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
   } else if (!is.null(settings.file$spec.dir)){
@@ -100,10 +100,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   }
   
   # Output directory
-  if (is.null(settings.file) && is.null(out.dir) && intern==FALSE) { 
-    print("*********************************************************************************")
-    stop("ERROR: No output directory given in settings file or function call.")          
-  } else if (!is.null(out.dir)){
+  if (!is.null(out.dir)){
     out.dir <- out.dir
   } else if (!is.null(settings.file$output.dir)){
     out.dir <- settings.file$output.dir
@@ -111,8 +108,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   
   # Instrument
   if (is.null(settings.file) && is.null(instrument) && is.null(spec.file.ext)){ 
-    print("*********************************************************************************")
-    stop("ERROR: No instrument defined in settings file or function call.")
+    stop("No instrument defined in settings file or function call.")
   } else if (!is.null(instrument)){
     instrument <- instrument
   } else if (!is.null(settings.file$instrument$name)){
@@ -129,12 +125,11 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   }
   
   # Input file extension
-  if (is.null(settings.file) && is.null(spec.file.ext)){ 
-    print("*********************************************************************************")
+  if (is.null(settings.file$options$spec.file.ext) && is.null(spec.file.ext)){ 
     if(instrument=="ASD") (spec.file.ext=".asd")
     if(instrument=="SE") (spec.file.ext=".sed")
-    warning("WARNING: No input file extension defined in settings file or function call.")
-    warning(paste0("WARNING: Using default: ", spec.file.ext) )
+    warning("No input file extension defined in settings file or function call")
+    warning(paste0("Using default: ", spec.file.ext))
   } else if (!is.null(spec.file.ext)){
     spec.file.ext <- spec.file.ext
   } else if (!is.null(settings.file$options$spec.file.ext)){
@@ -150,7 +145,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   do.call(paste("extract.metadata",tolower(instrument),sep="."),args = list(file.dir=file.dir,out.dir=out.dir,
                                                                             spec.file.ext=spec.file.ext,
                                                                             output.file.ext=output.file.ext,
-                                                                            tz=tz,intern=intern))
+                                                                            tz=tz))
 }
 #==================================================================================================#
 
@@ -166,11 +161,12 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
 ##' @param output.file.ext [Optional] Output file extension of meta-data information file. Default .csv
 ##' @param tz [Optional] Set the timezone of the spectra file collection.  Used to covert spectra collection 
 ##' time to UTC.  If unused it is assumed that the correct timezone is the current system timezone.
-##' @param intern logical. [Optional] Keep meta-data output as an internal object (TRUE) or write to file (FALSE)
+##' 
+##' @return output Returns output dataframe of ASD metadata information
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
-extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,tz,intern){
+extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,tz){
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
@@ -585,9 +581,11 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
 ##' @name extract.metadata.se
 ##' @title Extract metadata from Spectral Evolution files.  Called from extract.metadata
 ##' 
+##' @return output Returns output dataframe of SE metadata information
+##' 
 ##' @author Shawn P. Serbin
 ##' 
-extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,tz,intern){
+extract.metadata.se <- function(file.dir,out.dir=NULL,spec.file.ext,output.file.ext,tz){
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
@@ -598,14 +596,11 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     spec.file.ext <- spec.file.ext
   }
   
-  if (intern==FALSE){
-    print("------- Processing file(s) -------")
-  }
-  
+  # Create output dataframe header
   out.head <- c("File_Name","Instrument","Detectors","Measurement", "Date", "Time", "Temperature",
                 "Battery_Voltage","Averages","Integration","Dark_Mode","Foreoptic","Radiometric_Calibration",
                 "Units","Spec_Units","Wavelength_Range","Detector_Channels","Cal_Ref_Correction_File","Num_Data_Columns",
-                "Latitude_DD","Longitude_DD","Altitude_m","GPS_Time_UTC","Num_Satellites")
+                "Data_Line","Latitude_DD","Longitude_DD","Altitude_m","GPS_Time_UTC","Num_Satellites")
   
   # Determine if running on single file or directory
   check <- file.info(file.dir)
@@ -631,14 +626,14 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
   units <- rep(NA,length(se.files));wave.range <- rep(NA,length(se.files));lat <- rep(NA,length(se.files))
   long <- rep(NA,length(se.files));alt <- rep(NA,length(se.files));GPS.time <- rep(NA,length(se.files))
   satellites <- rep(NA,length(se.files));cal.ref.cor.file <- rep(NA,length(se.files))
-  channels <- rep(NA,length(se.files));data.columns <- rep(NA,length(se.files))
+  channels <- rep(NA,length(se.files));data.columns <- rep(NA,length(se.files));data.line <- rep(NA,length(se.files))
   spec.units <- rep(NA,length(se.files))
   
   # Run metadata extraction
   for (i in 1:length(se.files)){
-    data.line <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[2],":")[[1]]
-    data.line <- as.numeric(data.line[1])
-    file.head <- readLines(se.files[i],n=data.line-1)
+    data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[2],":")[[1]]
+    data.line[i] <- as.numeric(data.line.temp[1])
+    file.head <- readLines(se.files[i],n=data.line[i]-1)
 
     inst[i] <- gsub(" ","",(strsplit(file.head[4],":")[[1]])[2])
     detec[i] <- gsub(" ","",(strsplit(file.head[5],":")[[1]])[2])
@@ -664,7 +659,7 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     channels[i] <- gsub(" ","",(strsplit(file.head[24],":")[[1]])[2])
     data.columns[i] <- gsub("[^0-9]", "", strsplit(file.head[25],":")[[1]])
     
-    temp.1 <- read.table(se.files[i],skip=data.line,nrows=1,sep="\t")
+    temp.1 <- read.table(se.files[i],skip=data.line[i],nrows=1,sep="\t")
     temp.2 <- apply(temp.1, 1, function(x) pmatch("Reflect",x)) 
     temp.3 <- gsub("Reflect.", "", temp.1[temp.2])
     if (temp.3=="%"){
@@ -672,23 +667,23 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     } else {
       spec.units[i] <- "0-1"
     }
-    rm(data.line,file.head,temp.1,temp.2,temp.3)
+    rm(data.line.temp,file.head,temp.1,temp.2,temp.3)
   }
 
   # Create output
   out.metadata <- data.frame(se.files.names,inst,detec,meas,date,time,temp,batt,avg,int,dm,foreoptic,radcal,
-                             units,spec.units,wave.range,channels,cal.ref.cor.file,data.columns,lat,long,alt,
-                             GPS.time,satellites)
+                             units,spec.units,wave.range,channels,cal.ref.cor.file,data.columns,data.line,
+                             lat,long,alt,GPS.time,satellites)
   names(out.metadata) <- out.head
   
-  if (intern){
-    return(out.metadata)
-  } else {
+  if(!is.null(out.dir)){
     if (!file.exists(out.dir)) dir.create(out.dir, recursive=TRUE)
     write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
               row.names=FALSE)
   }
   
+  # return dataframe, if requested in function call
+  invisible(out.metadata)
 }
 #==================================================================================================#
 

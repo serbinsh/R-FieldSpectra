@@ -29,3 +29,4 @@ Collate:
     'spec.utils.R'
     'average.spec.R'
     'jump.correction.R'
+    'average.spec.se.R'

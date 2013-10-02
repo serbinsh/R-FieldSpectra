@@ -53,7 +53,7 @@
 }
 \examples{
 file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
-spec <- read.asd(file.dir,out.dir='$HOME',start.wave=350,end.wave=2500,step.size=1)
+spec <- read.asd(file.dir,out.dir='~',start.wave=350,end.wave=2500,step.size=1)
 
 # Plot output
 plot(spec$Wavelength,spec$Spectra,type="l",lwd=2,xlab="Wavelength (nm)", ylab="Reflectance (\%)")

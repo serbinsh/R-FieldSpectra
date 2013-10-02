@@ -3,7 +3,7 @@
 \title{Extract metadata from raw binary ASD files. Called from extract.metadata}
 \usage{
   extract.metadata.asd(file.dir, out.dir, spec.file.ext,
-    output.file.ext, tz, intern)
+    output.file.ext, tz)
 }
 \arguments{
   \item{file.dir}{File directory or filename of single
@@ -24,9 +24,10 @@
   collection.  Used to covert spectra collection time to
   UTC.  If unused it is assumed that the correct timezone
   is the current system timezone.}
-
-  \item{intern}{logical. [Optional] Keep meta-data output
-  as an internal object (TRUE) or write to file (FALSE)}
+}
+\value{
+  output Returns output dataframe of ASD metadata
+  information
 }
 \description{
   Extract metadata from raw binary ASD files. Called from

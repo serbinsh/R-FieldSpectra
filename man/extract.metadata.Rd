@@ -4,7 +4,7 @@
 \usage{
   extract.metadata(file.dir = NULL, out.dir = NULL,
     instrument = NULL, spec.file.ext = NULL,
-    output.file.ext = ".csv", tz = NULL, intern = FALSE,
+    output.file.ext = ".csv", tz = NULL,
     settings.file = NULL)
 }
 \arguments{
@@ -30,10 +30,11 @@
   UTC.  If unused it is assumed that the correct timezone
   is the current system timezone.}
 
-  \item{intern}{logical. [Optional] Keep meta-data output
-  as an internal object (TRUE) or write to file (FALSE)}
-
   \item{settings.file}{[Optional] Spectral settings file}
+}
+\value{
+  output Returns a dataframe of spectral metadata
+  information
 }
 \description{
   Extract metadata for each spectra sample.  Works on a
@@ -42,11 +43,11 @@
 \examples{
 # ASD
 file <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
-extract.metadata(file,instrument="ASD",intern=TRUE)
+output <- extract.metadata(file,instrument="ASD")
 
 # Spectral Evolution
 file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpec")
-extract.metadata(file,instrument="SE",intern=TRUE)
+output <- extract.metadata(file,instrument="SE")
 }
 \author{
   Shawn P. Serbin

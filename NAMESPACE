@@ -1,3 +1,4 @@
+export(average.spec.se)
 export(average.spec)
 export(concat.spectra)
 export(extract.metadata)
