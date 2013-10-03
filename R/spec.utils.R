@@ -117,7 +117,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
     #index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
     index <- agrep(pattern=temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","spectral evolution psm-3500",
                                         "evolution","psm-3500","psm 3500"),max=5,ignore.case = TRUE)
-    instrument <- inst[index]
+    instrument <- inst[max(index)]
   } else if (spec.file.ext==".asd") {
     instrument <- "ASD"
   } else if (spec.file.ext==".sed") {
@@ -175,10 +175,6 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     spec.file.ext <- ".asd"
   } else {
     spec.file.ext <- spec.file.ext
-  }
-  
-  if (intern==FALSE){
-    print("------- Processing file(s) -------")
   }
 
   # Determine if running on single file or directory
@@ -565,13 +561,16 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
                              dc.count,ref.count,sample.count,foreoptic.deg,comments)
   names(out.metadata) <- out.head
   
-  if (intern){
-    return(out.metadata)
-  } else {
+  # Output
+  if(!is.null(out.dir)){
     if (!file.exists(out.dir)) dir.create(out.dir, recursive=TRUE)
     write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
               row.names=FALSE)
   }
+  
+  # return dataframe, if requested in function call
+  invisible(out.metadata)
+  
 }
 #==================================================================================================#
 
@@ -585,7 +584,7 @@ extract.metadata.asd <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
-extract.metadata.se <- function(file.dir,out.dir=NULL,spec.file.ext,output.file.ext,tz){
+extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,tz){
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   

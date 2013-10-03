@@ -6,12 +6,19 @@
 ##' @title A function to import raw ASD binary files
 ##' @param file.dir A single ASD binary file or directory of ASD files to import.  Currently
 ##' only supports single directory processing (i.e. no nested dir structures)
-##' @param out.dir main output directory for processed spectra files.
-##' @param start.wave starting wavelength of ASD binary spectra files.  Depends on instrument.
-##' @param end.wave ending wavelength of ASD binary spectra files.  Depends on instrument.
-##' @param step.size wavelength step size for ASD files. E.g. 1nm, 5nm, 10nm
-##' @param image logical. Whether to produce png images of each spectrum
-##' @param asd.file.ext file extension of ASD files.  Usually ".asd" (Default)
+##' @param out.dir Main output directory for processed spectra files.  If not set then no output ASCII files 
+##' are provided. If set then output ASCII files for each spectra are written to out.dir/ascii_files
+##' @param spec.type Optional. Option to set the type of spectra being processed.  
+##' Options: "Reflectance" or "Transmittance"  Defaults to "Reflectance"
+##' @param start.wave Optional. Selected starting wavelength of ASD binary spectra files.  Depends on instrument.
+##' If not set then read from file header
+##' @param end.wave Optional. Selected ending wavelength of ASD binary spectra files.  Depends on instrument.  
+##' If not set then read from file header
+##' @param step.size Optional. Wavelength step size for ASD files. E.g. 1nm, 5nm, 10nm
+##' If not set then read from file header.  If selected for larger size than raw data, spectrum is interpolated
+##' (not yet availible)
+##' @param image Logical. Whether to produce png images of each spectrum (TRUE) or not (FALSE)
+##' @param spec.file.ext file extension of ASD files.  Usually ".asd" (Default)
 ##' @param output.file.ext optional setting to set file extension to output files. Defaults to .csv
 ##' @param settings.file settings file used for spectral processing options (OPTIONAL).  
 ##' Contains information related to the spectra collection instrument, output directories, 
@@ -19,6 +26,7 @@
 ##' file take precedent over options selected in the function call.
 ##'
 ##'@examples
+##' # Set input file
 ##' file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
 ##' spec <- read.asd(file.dir,out.dir='~',start.wave=350,end.wave=2500,step.size=1)
 ##' 
@@ -34,8 +42,9 @@
 ##' 
 ##' @author Shawn P. Serbin
 ##'
-read.asd <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,step.size=NULL,image=FALSE, 
-                    asd.file.ext=".asd",output.file.ext=".csv",settings.file=NULL){
+read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,end.wave=NULL,
+                     step.size=NULL,image=FALSE,spec.file.ext=".asd",output.file.ext=".csv",
+                     settings.file=NULL){
 
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
@@ -48,56 +57,62 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,st
   } else if (!is.null(settings.file$spec.dir)){
     file.dir <- settings.file$spec.dir
   } 
-    
-  ### Define wavelengths
-  if (is.null(settings.file) && is.null(start.wave)){
-    #stop(paste0("No starting wavelength set in settings file or in function call. Starting Wavelength is: ", start.wave))
-    use.metadata.start.wave <- TRUE
-  } else if (!is.null(start.wave)){
-    start.wave <- start.wave
-  } else if (!is.null(settings.file$instrument$start.wave)){
-    start.wave <- as.numeric(settings.file$instrument$start.wave)
-  }
   
-  if (is.null(settings.file) && is.null(end.wave)){
-    #stop(paste0("No ending wavelength set in settings file or in function call. Ending Wavelength is: ", end.wave))
-    use.metadata.end.wave <- TRUE
-  } else if (!is.null(end.wave)){
-    end.wave <- end.wave
-  } else if (!is.null(settings.file$instrument$end.wave)){
-    end.wave <- as.numeric(settings.file$instrument$end.wave)
-  }
-  
-  if (is.null(settings.file) && is.null(step.size)){
-      #warning("No wavelength step size give in settings file or in function call. Setting to 1nm by default")
-    use.metadata.step.size <- TRUE
-  } else if (!is.null(step.size)){
-    step.size <- step.size
-  } else if (!is.null(settings.file$instrument$step.size)){
-    step.size <- as.numeric(settings.file$instrument$step.size)
-  }
-  
-  ### Define wavelength numbers for processing/output based on defined start/end wavelengths and step size
-  if (!is.null(start.wave) && !is.null(end.wave) && !is.null(step.size)){
-    lambda <- seq(start.wave, end.wave, step.size) 
-  } else {
-    use.metadata.lambda <- TRUE
-  }
-
-  ### create output directory if it doesn't already exist
+  ### create output directory if it doesn't already exist and is set
   if (!is.null(out.dir)) {
     out.dir <- out.dir
   } else if (!is.null(settings.file$output.dir)) {
     out.dir <- paste0(settings.file$output.dir, dlm, "ascii_files/")
-  } else {
-    ind <- gregexpr(dlm, file.dir)[[1]]
-    out.dir <- paste0(substr(file.dir, ind[1], ind[length(ind)-1]-1), dlm, "ascii_files")
-    if (!file.exists(out.dir)) dir.create(out.dir, recursive=TRUE)
   }
-  if (!file.exists(out.dir)) dir.create(out.dir, recursive=TRUE)
-
+  if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
+  
   ### Remove any previous or old output in out.dir
   unlink(list.files(out.dir, full.names=TRUE), recursive=FALSE, force=TRUE)
+
+  ### Select optional spectra type for plotting
+  if (!is.null(spec.type)) {
+    s.type <- c("Reflectance","Transmittance")
+    index <- agrep(pattern=temp,c("reflectance","transmittance"),ignore.case = TRUE)
+    spec.type <- s.type[index]
+  } else {
+    spec.type <- "Reflectance"
+  }
+  
+  ### Check for custom input spec file extension
+  if (is.null(settings.file$options$spec.file.ext) && is.null(spec.file.ext)){
+    warning("No input spectra file extension given. Using default .asd")
+    spec.file.ext <- ".asd"
+  } else if (!is.null(spec.file.ext)) {
+    spec.file.ext <- spec.file.ext
+  } else if (!is.null(settings.file$options$spec.file.ext)) {
+    spec.file.ext <- settings.file$options$spec.file.ext
+  }
+  
+  ### Look for a custom output extension, otherwise use default
+  if (is.null(settings.file$options$output.file.ext) && is.null(output.file.ext)){
+    output.file.ext <- ".csv"  # <-- Default
+  } else if (!is.null(output.file.ext)){
+    output.file.ext <- output.file.ext
+  } else if (!is.null(settings.file$options$output.file.ext)){
+    output.file.ext <- settings.file$options$output.file.ext
+  } 
+  
+  ### Define wavelengths.  If set in settings or function call.  Otherwise read from file header
+  if (!is.null(start.wave)){
+    start.wave <- start.wave
+  } else if (!is.null(settings.file$instrument$start.wave)){
+    start.wave <- as.numeric(settings.file$instrument$start.wave)
+  }
+  if (!is.null(end.wave)){
+    end.wave <- end.wave
+  } else if (!is.null(settings.file$instrument$end.wave)){
+    end.wave <- as.numeric(settings.file$instrument$end.wave)
+  }
+  if (!is.null(step.size)){
+    step.size <- step.size
+  } else if (!is.null(settings.file$instrument$step.size)){
+    step.size <- as.numeric(settings.file$instrument$step.size)
+  }
   
   #--------------------- Begin function -----------------------#
   
@@ -106,25 +121,25 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,st
   
   ### Run file import loop or single import.  First check if given a directory or a single file
   if (check$isdir){
-
+    
+    ### Get file list
+    asd.files <- list.files(path=file.dir, pattern=spec.file.ext, full.names=FALSE)
+    asd.files.full <- list.files(path=file.dir, pattern=spec.file.ext, full.names=TRUE)
+    
+    ### Define wavelengths using file header, if not defined already
+    if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
+      start.wave <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",spec.file.ext=spec.file.ext)$Calibrated_Starting_Wavelength
+      step.size <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",spec.file.ext=spec.file.ext)$Calibrated_Wavelength_Step
+      channels <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",spec.file.ext=spec.file.ext)$Detector_Channels
+      end.wave <- start.wave+((channels-1)/step.size)
+      lambda <- seq(start.wave,end.wave,step.size)
+    } else {
+      lambda <- seq(start.wave,end.wave,step.size)
+    }
+    
     ### Setup wavelengths for output
     waves <- paste0("Wave_", lambda)
       
-    ### Get file list
-    asd.files <- list.files(path=file.dir, pattern=asd.file.ext, full.names=FALSE)
-    asd.files.full <- list.files(path=file.dir, pattern=asd.file.ext, full.names=TRUE)
-    
-    # Get spec dimensions for spec dataframe
-    if (is.null(start.wave)){
-      start.wave <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",intern=TRUE)$Calibrated_Starting_Wavelength
-    } else if (is.null(step.size)) {
-      step.size <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",intern=TRUE)$Calibrated_Wavelength_Step
-    } else if (is.null(end.wave)) {
-      channels <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",intern=TRUE)$Detector_Channels
-      end.wave <- start.wave+((channels-1)/step.size)
-    } 
-    # lambda <- seq(start.wave, end.wave, step.size)
-    
     ### Setup progress bar
     j <- 1 # <--- Numeric counter for progress bar
     num.files <- length(asd.files)
@@ -137,7 +152,7 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,st
     output.spectra <- data.frame(array(data=NA, dim=c(length(lambda), 2)))
     
     for (i in 1:length(asd.files)){
-      tmp <- unlist(strsplit(asd.files[i], paste0("\\", asd.file.ext)))   # <--- remove file extension from file name
+      tmp <- unlist(strsplit(asd.files[i], paste0("\\", spec.file.ext)))   # <--- remove file extension from file name
       out.spec <- array(0, (end.wave-start.wave) + 1)   
       
       ### Open binary file for reading
@@ -192,7 +207,7 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,st
       output.data.frame[i, 1] <- tmp
       output.data.frame[i, 2:(length(out.spec) + 1)] <- out.spec
       
-      ### Output individual spectra file as ASCII text .csv file in output directory
+      ### Output individual spectra files as ASCII text .csv file in output directory
       names(output.spectra) <- c("Wavelength", paste0(tmp[1]))
       output.spectra[, 1] <- lambda
       output.spectra[, 2] <- out.spec

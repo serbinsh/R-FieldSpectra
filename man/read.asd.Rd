@@ -3,32 +3,43 @@
 \title{A function to import raw ASD binary files}
 \usage{
   read.asd(file.dir = NULL, out.dir = NULL,
-    start.wave = NULL, end.wave = NULL, step.size = NULL,
-    image = FALSE, asd.file.ext = ".asd",
-    output.file.ext = ".csv", settings.file = NULL)
+    spec.type = NULL, start.wave = NULL, end.wave = NULL,
+    step.size = NULL, image = FALSE,
+    spec.file.ext = ".asd", output.file.ext = ".csv",
+    settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{A single ASD binary file or directory of
   ASD files to import.  Currently only supports single
   directory processing (i.e. no nested dir structures)}
 
-  \item{out.dir}{main output directory for processed
-  spectra files.}
+  \item{out.dir}{Main output directory for processed
+  spectra files.  If not set then no output ASCII files are
+  provided. If set then output ASCII files for each spectra
+  are written to out.dir/ascii_files}
 
-  \item{start.wave}{starting wavelength of ASD binary
-  spectra files.  Depends on instrument.}
+  \item{spec.type}{Optional. Option to set the type of
+  spectra being processed. Options: "Reflectance" or
+  "Transmittance" Defaults to "Reflectance"}
 
-  \item{end.wave}{ending wavelength of ASD binary spectra
-  files.  Depends on instrument.}
+  \item{start.wave}{Optional. Selected starting wavelength
+  of ASD binary spectra files.  Depends on instrument. If
+  not set then read from file header}
 
-  \item{step.size}{wavelength step size for ASD files. E.g.
-  1nm, 5nm, 10nm}
+  \item{end.wave}{Optional. Selected ending wavelength of
+  ASD binary spectra files.  Depends on instrument. If not
+  set then read from file header}
 
-  \item{image}{logical. Whether to produce png images of
-  each spectrum}
+  \item{step.size}{Optional. Wavelength step size for ASD
+  files. E.g. 1nm, 5nm, 10nm If not set then read from file
+  header.  If selected for larger size than raw data,
+  spectrum is interpolated (not yet availible)}
 
-  \item{asd.file.ext}{file extension of ASD files.  Usually
-  ".asd" (Default)}
+  \item{image}{Logical. Whether to produce png images of
+  each spectrum (TRUE) or not (FALSE)}
+
+  \item{spec.file.ext}{file extension of ASD files.
+  Usually ".asd" (Default)}
 
   \item{output.file.ext}{optional setting to set file
   extension to output files. Defaults to .csv}
@@ -52,6 +63,7 @@
   file format
 }
 \examples{
+# Set input file
 file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
 spec <- read.asd(file.dir,out.dir='~',start.wave=350,end.wave=2500,step.size=1)
 
