@@ -723,8 +723,7 @@ concat.spectra <- function(file.dir=NULL,out.dir=NULL,out.filename=NULL,in.file.
   
   ### Check for proper input
   if (is.null(file.dir)){
-    print("*********************************************************************************")
-    stop("******* ERROR: No input file directory given.  Please correct. *******")
+    stop("ERROR: No input file directory given.  Please correct.")
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
   }
@@ -765,7 +764,7 @@ concat.spectra <- function(file.dir=NULL,out.dir=NULL,out.filename=NULL,in.file.
   spec.file <- read.csv(paste(file.dir,dlm,in.files[1],sep=""))
   in.waves <- spec.file[,1]
   dims <- dim(spec.file)
-  if (dims[2]>dims[1]) stop("***** ERROR: Input spectral files are not properly formatted for this function *****")
+  if (dims[2]>dims[1]) stop("ERROR: Input spectral files are not properly formatted for this function")
   
   in.spec <- array(data=NA,dim=c(num.files,max(dims)))
   ### Read in files to concatenate
@@ -876,7 +875,7 @@ smooth.spectra <- function(file.dir=NULL,input.file=NULL,out.dir=NULL,out.filena
   # TODO: Allow for adding a header to output file(s).  Something like "Wavelength", "Spectra"
   
   ok = require(signal) ; if (! ok) 
-    stop("*** Package signal is not available.  This package is needed for running the smooth.spectra() function ***")
+    stop("Package signal is not available. This package is needed for running the smooth.spectra() function")
   #sgolayfilt(x, p = 3, n = p + 3 - p%%2, m = 0, ts = 1)
   
   ### Set platform specific file path delimiter.  Probably will always be "/"

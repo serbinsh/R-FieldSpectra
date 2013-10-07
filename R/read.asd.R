@@ -30,6 +30,9 @@
 ##' file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
 ##' spec <- read.asd(file.dir,out.dir='~',start.wave=350,end.wave=2500,step.size=1)
 ##' 
+##' # Get info from file header
+##' spec <- read.asd(file.dir,out.dir='~')
+##' 
 ##' # Plot output
 ##' plot(spec$Wavelength,spec$Spectra,type="l",lwd=2,xlab="Wavelength (nm)", ylab="Reflectance (%)")
 ##' 
@@ -46,6 +49,10 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
                      step.size=NULL,image=FALSE,spec.file.ext=".asd",output.file.ext=".csv",
                      settings.file=NULL){
 
+  ## TODO: Reformat function for speed.  Read in all data to array then generate output spec and images.
+  # Rathter than reading/writing for each file in serial
+  ## Allow output for single spec files
+  
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
@@ -64,11 +71,15 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
   } else if (!is.null(settings.file$output.dir)) {
     out.dir <- paste0(settings.file$output.dir, dlm, "ascii_files/")
   }
-  if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
+  if (!is.null(out.dir)) {
+    if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
+  }
   
   ### Remove any previous or old output in out.dir
-  unlink(list.files(out.dir, full.names=TRUE), recursive=FALSE, force=TRUE)
-
+  if (!is.null(out.dir)) {
+    unlink(list.files(out.dir, full.names=TRUE), recursive=FALSE, force=TRUE)
+  }
+  
   ### Select optional spectra type for plotting
   if (!is.null(spec.type)) {
     s.type <- c("Reflectance","Transmittance")
@@ -208,27 +219,29 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
       output.data.frame[i, 2:(length(out.spec) + 1)] <- out.spec
       
       ### Output individual spectra files as ASCII text .csv file in output directory
-      names(output.spectra) <- c("Wavelength", paste0(tmp[1]))
-      output.spectra[, 1] <- lambda
-      output.spectra[, 2] <- out.spec
-      out.ascii <- paste0(tmp[1], output.file.ext)     # setup output file name
-      
-      ### Below for single output directory
-      write.csv(output.spectra, paste0(out.dir, dlm, out.ascii), row.names=FALSE)
-      
+      if (!is.null(out.dir)) {
+        names(output.spectra) <- c("Wavelength", paste0(tmp[1]))
+        output.spectra[, 1] <- lambda
+        output.spectra[, 2] <- out.spec
+        out.ascii <- paste0(tmp[1], output.file.ext)     # setup output file name
+        
+        ### Below for single output directory
+        write.csv(output.spectra, paste0(out.dir, dlm, out.ascii), row.names=FALSE)
+      }
+
       ### Output plot of spectra for quick reference
       # First setup plot bounds
       if(image){
-      rng <- range(output.spectra[, 2])
-      if (rng[1]<0) rng[1] <- 0
-      if (rng[2]>1) rng[2] <- 1
-      ylimit <- c(rng[1], rng[2])
-      png(file=paste0(out.dir, dlm, tmp[1], ".png"), width=800, height=600, res=100)
-      plot(output.spectra[, 1], output.spectra[, 2], cex=0.01, xlim=c(350, 2500), ylim=ylimit, xlab="Wavelength (nm)",
-           ylab="Reflectance (%)", main=out.ascii, cex.axis=1.3, cex.lab=1.3)
-      lines(output.spectra[, 1], output.spectra[, 2], lwd=2)
-      box(lwd=2.2)
-      dev.off()
+        rng <- range(output.spectra[, 2])
+        if (rng[1]<0) rng[1] <- 0
+        if (rng[2]>1) rng[2] <- 1
+        ylimit <- c(rng[1], rng[2])
+        png(file=paste0(out.dir, dlm, tmp[1], ".png"), width=800, height=600, res=100)
+        plot(output.spectra[, 1], output.spectra[, 2], cex=0.01, xlim=c(350, 2500), ylim=ylimit, xlab="Wavelength (nm)",
+            ylab="Reflectance (%)", main=out.ascii, cex.axis=1.3, cex.lab=1.3)
+        lines(output.spectra[, 1], output.spectra[, 2], lwd=2)
+        box(lwd=2.2)
+        dev.off()
       }
       
       ### Display progress to console
@@ -242,7 +255,19 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
     close(pb)
         
   } else {
+    asd.files <- list.files(path=file.dir, pattern=spec.file.ext, full.names=FALSE)
     to.read <- file(file.dir, "rb")
+    
+    ### Define wavelengths using file header, if not defined already
+    if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
+      start.wave <- extract.metadata(file.dir=file.dir[1],instrument="ASD",spec.file.ext=spec.file.ext)$Calibrated_Starting_Wavelength
+      step.size <- extract.metadata(file.dir=file.dir[1],instrument="ASD",spec.file.ext=spec.file.ext)$Calibrated_Wavelength_Step
+      channels <- extract.metadata(file.dir=file.dir[1],instrument="ASD",spec.file.ext=spec.file.ext)$Detector_Channels
+      end.wave <- start.wave+((channels-1)/step.size)
+      lambda <- seq(start.wave,end.wave,step.size)
+    } else {
+      lambda <- seq(start.wave,end.wave,step.size)
+    }
     
     ### Get measured radiance/reflectance data
     seek(to.read, where=484, origin="start", rw="r")
@@ -287,7 +312,11 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
     } # End if/else
     
     output.data.frame <- list(Wavelength=lambda, Spectra=out.spec)  # Spectral data
+    
+    
   } # End of if/else loop for files
+  
+  
   invisible(output.data.frame)
 } # End of function call
 #==================================================================================================#

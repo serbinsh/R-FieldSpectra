@@ -8,13 +8,15 @@
 ##' 
 ##' @param file.dir directory of spectra files to process
 ##' @param out.dir output directory for processed spectra files
+##' @param spec.type [Optional] Option to set the type of spectra being processed.  
+##' Options: "Reflectance" or "Transmittance"  Defaults to "Reflectance"
 ##' @param start.wave starting wavelength of spectra files. Not needed if specified in XML settings file.
 ##' @param end.wave ending wavelength of spectra files. Not needed if specified in XML settings file. 
 ##' @param step.size resolution of spectra files. E.g. 1 for 1nm, 5 for 5nm. Not needed if specified in settings file.
-##' @param jumploc1 location of the first jump in the spectra to correct. Not needed if jump.correction=FALSE
-##' or if specified in XML settings file.
-##' @param jumploc2 location of the second jump in the spectra to correct. Not needed if jump.correction=FALSE
-##' or if specified in XML settings file.
+##' @param jumploc1 location of the first jump in the spectra to correct. Not needed if 
+##' specified in XML settings file.
+##' @param jumploc2 location of the second jump in the spectra to correct. Not needed if
+##' specified in XML settings file.
 ##' @param firstJumpMax maximum jump threshold for the first jump location. Determines whether spectra
 ##' will be corrected or flaged as bad. (Optional.  Default is 0.02)
 ##' @param secondJumpMax maximum jump threshold for the second jump location. Determines whether spectra
@@ -28,8 +30,7 @@
 ##'
 ##' @examples
 ##' \dontrun{
-##' jump.correction()
-##' jump.correction(file.dir,out.dir, start.wave=350,end.wave=2500,step.size=1,jumploc1=651,jumploc2=1451,
+##' jump.correction(file.dir,out.dir='~', start.wave=350,end.wave=2500,step.size=1,jumploc1=651,jumploc2=1451,
 ##' output.file.ext=".csv",settings.file=NULL)
 ##' }
 ##'
@@ -37,22 +38,25 @@
 ##'
 ##' @author Shawn P. Serbin
 ##'
-jump.correction = function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,step.size=NULL,jumploc1=NULL,jumploc2=NULL,
-                           firstJumpMax=NULL,secondJumpMax=NULL,output.file.ext=NULL,settings.file=NULL){
+jump.correction = function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,end.wave=NULL,step.size=NULL,
+                           jumploc1=NULL,jumploc2=NULL,firstJumpMax=NULL,secondJumpMax=NULL,
+                           output.file.ext=NULL,settings.file=NULL){
   
   # TODO: implement the use of a settings file in this function. Allow adjustment of 
   # JC thresholds (below)
+  # Allow running of function on single file
+  # Allow for no written output, just returning of dataframe
+  # Clean up function, improve generality
   
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
 
   ### Check for proper input directory
-  if (is.null(settings.file) && is.null(file.dir)){
-    print("*********************************************************************************")
-    stop("******* ERROR: No input file directory given in settings file or function call. *******")
+  if (is.null(settings.file$output.dir) && is.null(file.dir)){
+    stop("ERROR: No input file directory given in settings file or function call")
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
-  } else if (is.null(file.dir) && !is.null(settings.file$output.dir)){
+  } else if (!is.null(settings.file$output.dir)){
     file.dir <- paste(settings.file$output.dir,dlm,"ascii_files/",sep="")
   } 
   
@@ -65,64 +69,64 @@ jump.correction = function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=N
     ind <- gregexpr(dlm, file.dir)[[1]]
     out.dir <- paste(substr(file.dir,ind[1], ind[length(ind)-1]-1),dlm,"jc_files",sep="")
   }
-  if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
+  if (!is.null(out.dir)) {
+    if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
+  }
   
   ### Create bad spectra folder. Spectra not corrected
-  badspec.dir <- paste(out.dir,dlm,"Bad_Spectra",sep="")
-  if (! file.exists(badspec.dir)) dir.create(badspec.dir,recursive=TRUE)
+  if (!is.null(out.dir)) {
+    badspec.dir <- paste(out.dir,dlm,"Bad_Spectra",sep="")
+    if (! file.exists(badspec.dir)) dir.create(badspec.dir,recursive=TRUE)
+  }
   
   ### Remove any previous or old output in out.dir
-  unlink(list.files(out.dir,full.names=TRUE),recursive=FALSE,force=TRUE)
-  unlink(list.files(badspec.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
-  
-  ### Define wavelengths
-  if (is.null(settings.file) && is.null(start.wave)){
-    print("*********************************************************************************")
-    stop(paste("******* ERROR: No starting wavelength set in settings file or in function call. Starting Wavelength is: ",start.wave," *******",sep=""))
-  } else if (!is.null(settings.file$instrument$start.wave)){
-    start.wave <- as.numeric(settings.file$instrument$start.wave)
-  } else if (!is.null(start.wave)){
-    start.wave <- start.wave
+  if (!is.null(out.dir)) {
+    unlink(list.files(out.dir,full.names=TRUE),recursive=FALSE,force=TRUE)
+    unlink(list.files(badspec.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
   }
   
-  if (is.null(settings.file) && is.null(end.wave)){
-    print("*********************************************************************************")
-    stop(paste("******* ERROR: No ending wavelength set in settings file or in function call. Ending Wavelength is: ",end.wave," *******",sep=""))
-  } else if (!is.null(settings.file$instrument$end.wave)){
-    end.wave <- as.numeric(settings.file$instrument$end.wave)
-  } else if (!is.null(end.wave)){
-    end.wave <- end.wave
+  ### Select optional spectra type for plotting
+  if (!is.null(spec.type)) {
+    s.type <- c("Reflectance","Transmittance")
+    index <- agrep(pattern=temp,c("reflectance","transmittance"),ignore.case = TRUE)
+    spec.type <- s.type[index]
+  } else {
+    spec.type <- "Reflectance"
   }
-  
-  if (is.null(settings.file) && is.null(step.size)){
-    print("*********************************************************************************")
-    print("******* WARNING: No wavelength step size give in settings file or in function call. Setting to 1nm by default *******")
-  } else if (!is.null(settings.file$instrument$step.size)){
-    step.size <- as.numeric(settings.file$instrument$step.size)
-  } else if (!is.null(step.size)){
-    step.size <- step.size
-  }
-  
-  ### Define wavelengths
-  lambda <- seq(start.wave,end.wave,step.size)
   
   ### Look for a custom output extension, otherwise use default
   if (is.null(settings.file$options$output.file.ext) && is.null(output.file.ext)){
     output.file.ext <- ".csv"  # <-- Default
-  } else if (!is.null(settings.file$options$output.file.ext)){
-    output.file.ext <- settings.file$options$output.file.ext
   } else if (!is.null(output.file.ext)){
     output.file.ext <- output.file.ext
-  }
+  } else if (!is.null(settings.file$options$output.file.ext)){
+    output.file.ext <- settings.file$options$output.file.ext
+  } 
   
+  ### Define wavelengths.  If set in settings or function call.  Otherwise read from file header
+  if (!is.null(start.wave)){
+    start.wave <- start.wave
+  } else if (!is.null(settings.file$instrument$start.wave)){
+    start.wave <- as.numeric(settings.file$instrument$start.wave)
+  }
+  if (!is.null(end.wave)){
+    end.wave <- end.wave
+  } else if (!is.null(settings.file$instrument$end.wave)){
+    end.wave <- as.numeric(settings.file$instrument$end.wave)
+  }
+  if (!is.null(step.size)){
+    step.size <- step.size
+  } else if (!is.null(settings.file$instrument$step.size)){
+    step.size <- as.numeric(settings.file$instrument$step.size)
+  }
+
   ### Find files to process
   ascii.files <- list.files(path=file.dir,pattern=output.file.ext,full.names=FALSE)
   num.files  <- length(ascii.files)
   
   ### Check whether files exist. STOP if files missing and display an error
   if (num.files<1){
-    print("*********************************************************************************")
-    stop(paste("******* ERROR: No ASCII files found in directory with extension: ",output.file.ext," *******",sep=""))
+    stop(paste("No ASCII files found in directory with extension: ",output.file.ext,sep=""))
   }
   
   ### Display info to the terminal
@@ -144,39 +148,39 @@ jump.correction = function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=N
   firstJumpMin <- 0.0; # default
   if (is.null(settings.file$options$firstJumpMax) && is.null(firstJumpMax)){
     firstJumpMax <- 0.02; # set default
+  } else if (!is.null(firstJumpMax)) {
+    firstJumpMax <- firstJumpMax; # else use option set in function call
   } else if (!is.null(settings.file$options$firstJumpMax)) {
     firstJumpMax <- settings.file$options$firstJumpMax; # use settings file
-  } else if (is.null(settings.file$options$firstJumpMax) && !is.null(firstJumpMax)) {
-    firstJumpMax <- firstJumpMax; # else use option set in function call
   }
   secondJumpMin <- 0.0; # default
   if (is.null(settings.file$options$secondJumpMax) && is.null(secondJumpMax)){
     secondJumpMax <- 0.02; # set default
+  } else if (!is.null(secondJumpMax)) {
+    secondJumpMax <- secondJumpMax; # else use option set in function call
   } else if (!is.null(settings.file$options$secondJumpMax)) {
     secondJumpMax <- settings.file$options$secondJumpMax; # use settings file
-  } else if (is.null(settings.file$options$secondJumpMax) && !is.null(secondJumpMax)) {
-    secondJumpMax <- secondJumpMax; # else use option set in function call
   }
   
   ### Jump locations
   # Jump 1
-  if (is.null(settings.file$instrument$jumploc1) && is.null(jumploc1)){
-    print("*********************************************************************************")
-    stop("******* ERROR: Spectral splice (i.e. jump) locations not given. Please correct. *******")
-  } else if (!is.null(jumploc1)) {
+  if (!is.null(jumploc1)) {
     jumploc1 <- jumploc1 # use option set in function call
   } else if (!is.null(settings.file$instrument$jumploc1)) {
     jumploc1 <- as.numeric(settings.file$instrument$jumploc1) # use settings file
+  } else {
+    jumploc1 <- extract.metadata(file.dir=paste0(file.dir,dlm,ascii.files[1]),instrument="ASD",
+                                 spec.file.ext='.csv')$VNIR_SWIR1_Splice
   }
-  
+
   # Jump 2
-  if (is.null(settings.file$instrument$jumploc2) && is.null(jumploc2)){
-    print("*********************************************************************************")
-    stop("******* ERROR: Spectral splice (i.e. jump) locations not given. Please correct. *******")
-  } else if (!is.null(jumploc2)) {
+  if (!is.null(jumploc2)) {
     jumploc2 <- jumploc2 # use option set in function call
   } else if (!is.null(settings.file$instrument$jumploc2)) {
     jumploc2 <- as.numeric(settings.file$instrument$jumploc2) # use settings file
+  } else {
+    jumploc1 <- extract.metadata(file.dir=paste0(file.dir,dlm,ascii.files[1]),instrument="ASD",
+                                 spec.file.ext='.csv')$SWIR1_SWIR2_Splice
   }
   #*****************************************************************************************************
   
