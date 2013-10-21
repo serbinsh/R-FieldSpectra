@@ -13,15 +13,17 @@
 ##' @param start.wave starting wavelength of spectra files. Not needed if specified in XML settings file.
 ##' @param end.wave ending wavelength of spectra files. Not needed if specified in XML settings file. 
 ##' @param step.size resolution of spectra files. E.g. 1 for 1nm, 5 for 5nm. Not needed if specified in settings file.
-##' @param jumploc1 location of the first jump in the spectra to correct. Not needed if 
+##' @param jumploc1 Wavelength location of the first jump in the spectra to correct. Not needed if 
 ##' specified in XML settings file.
-##' @param jumploc2 location of the second jump in the spectra to correct. Not needed if
+##' @param jumploc2 Wavelength location of the second jump in the spectra to correct. Not needed if
 ##' specified in XML settings file.
 ##' @param firstJumpMax maximum jump threshold for the first jump location. Determines whether spectra
 ##' will be corrected or flaged as bad. (Optional.  Default is 0.02)
 ##' @param secondJumpMax maximum jump threshold for the second jump location. Determines whether spectra
 ##' will be corrected or flaged as bad. (Optional.  Default is 0.02)
 ##' @param output.file.ext option to set file extension of the output files. Defaults to .csv
+##' @param metadata.file Option to select custom metadata file for use in processing. If not set
+##' then the information is either read from default metadata file, the settings file or at the function call. 
 ##' @param settings.file settings file used for spectral processing options (OPTIONAL).  
 ##' Contains information related to the spectra collection instrument, output directories, 
 ##' and processing options such as applying a jump correction to the spectra files.  
@@ -38,9 +40,9 @@
 ##'
 ##' @author Shawn P. Serbin
 ##'
-jump.correction = function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,end.wave=NULL,step.size=NULL,
+jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,end.wave=NULL,step.size=NULL,
                            jumploc1=NULL,jumploc2=NULL,firstJumpMax=NULL,secondJumpMax=NULL,
-                           output.file.ext=NULL,settings.file=NULL){
+                           output.file.ext=NULL,metadata.file=NULL,settings.file=NULL){
   
   # TODO: implement the use of a settings file in this function. Allow adjustment of 
   # JC thresholds (below)
@@ -119,16 +121,26 @@ jump.correction = function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=
   } else if (!is.null(settings.file$instrument$step.size)){
     step.size <- as.numeric(settings.file$instrument$step.size)
   }
-
+  # Set wavelength range
+  #if (!is.null(start.wave) & !is.null(end.wave) & !is.null(step.size)) {
+  #  lambda <- seq(start.wave,end.wave,step.size)
+  #}
+  
   ### Find files to process
   ascii.files <- list.files(path=file.dir,pattern=output.file.ext,full.names=FALSE)
   num.files  <- length(ascii.files)
+  #asd.files.full <- list.files(path=settings$spec.dir, pattern=spec.file.ext, full.names=TRUE)
   
   ### Check whether files exist. STOP if files missing and display an error
   if (num.files<1){
-    stop(paste("No ASCII files found in directory with extension: ",output.file.ext,sep=""))
+    stop(paste("No spec files found in directory with extension: ",output.file.ext,sep=""))
   }
   
+  ### Spectra metadata.  NEED TO MAKE MORE GENERAL
+  metadata.file <- list.files(path=settings.file$output.dir,pattern="metadata",full.names=FALSE)
+  print(paste("------- Using metadata file: ",metadata.file,sep=""))
+  metadata <- read.csv(paste(settings.file$output.dir,dlm,metadata.file,sep=""))
+
   ### Display info to the terminal
   tmp  <- unlist(strsplit(file.dir,dlm))
   current <- tmp[length(tmp)]
@@ -137,7 +149,6 @@ jump.correction = function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=
   flush.console() #<--- show output in real-time
   
   #--------------------- Setup function -----------------------#
-
   # Create file info list for putput
   info <- data.frame(Spectra=rep(NA,num.files),Jump1_Size = rep(NA,num.files),
                     Jump2_Size = rep(NA,num.files),Corrected = rep(NA,num.files))
@@ -162,15 +173,13 @@ jump.correction = function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=
     secondJumpMax <- settings.file$options$secondJumpMax; # use settings file
   }
   
-  ### Jump locations
+  ### Jump locations.  If set in function arg or settings file
   # Jump 1
   if (!is.null(jumploc1)) {
     jumploc1 <- jumploc1 # use option set in function call
   } else if (!is.null(settings.file$instrument$jumploc1)) {
     jumploc1 <- as.numeric(settings.file$instrument$jumploc1) # use settings file
-  } else {
-    jumploc1 <- extract.metadata(file.dir=paste0(file.dir,dlm,ascii.files[1]),instrument="ASD",
-                                 spec.file.ext='.csv')$VNIR_SWIR1_Splice
+    jumploc1 <- (jumploc1-350)+1 # Change to index
   }
 
   # Jump 2
@@ -178,34 +187,63 @@ jump.correction = function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=
     jumploc2 <- jumploc2 # use option set in function call
   } else if (!is.null(settings.file$instrument$jumploc2)) {
     jumploc2 <- as.numeric(settings.file$instrument$jumploc2) # use settings file
-  } else {
-    jumploc1 <- extract.metadata(file.dir=paste0(file.dir,dlm,ascii.files[1]),instrument="ASD",
-                                 spec.file.ext='.csv')$SWIR1_SWIR2_Splice
+    jumploc2 <- (jumploc2-350)+1 # Change to index
   }
   #*****************************************************************************************************
   
-  ### Define wavelengths for correction of first jump
-  jmp1Loc1 <- jumploc1-1
-  jmp1Loc2 <- jumploc1
-  jmp1Loc3 <- jumploc1+1
-  jmp1Loc4 <- jumploc1+2
-  
-  ### Define wavelengths for correction of second jump
-  jmp2Loc1 <- jumploc2-1
-  jmp2Loc2 <- jumploc2
-  jmp2Loc3 <- jumploc2+1
-  jmp2Loc4 <- jumploc2+2
   
   #-------------------------- Start JC loop --------------------------#
   j <- 1 # <--- Numeric counter for progress bar
   pb <- txtProgressBar(min = 0, max = num.files, char="*",width=70,style = 3)
   for (i in 1:num.files){
+    
+    # Spec name
     tmp <- unlist(strsplit(ascii.files[i],paste("\\",output.file.ext,sep="")))  # <--- remove file extension from file name
-    out.spec <- array(0,(end.wave-start.wave)+1)                         # refl or trans
+    
+    #---------------- Setup Wavelengths --------------------------------#
+    if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
+      # Using metadata info
+      start.wave <- metadata[which(metadata$Spectra_File_Name==tmp),]$Calibrated_Starting_Wavelength
+      step.size <- metadata[which(metadata$Spectra_File_Name==tmp),]$Calibrated_Wavelength_Step
+      channels <- metadata[which(metadata$Spectra_File_Name==tmp),]$Detector_Channels
+      end.wave <- start.wave+((channels-1)/step.size)
+      lambda <- seq(start.wave,end.wave,step.size)
+    } else {
+      # Using settings file or function argument
+      lambda <- seq(start.wave,end.wave,step.size)
+    }
+    
+    #---------------- Setup Jump Location -----------------------------#
+    if (is.null(jumploc1) | is.null(jumploc2)) {
+      jumploc1 <- metadata[which(metadata$Spectra_File_Name==tmp),]$VNIR_SWIR1_Splice
+      jumploc1 <- (jumploc1-350)+1 # Change to index
+      jumploc2 <- metadata[which(metadata$Spectra_File_Name==tmp),]$SWIR1_SWIR2_Splice
+      jumploc2 <- (jumploc2-350)+1 # Change to index
+    } else {
+      # Keep previously set values
+      jumploc1 <- jumploc1
+      jumploc2 <- jumploc2
+    }
+    
+    ### Define wavelengths for correction of first jump
+    jmp1Loc1 <- jumploc1-1
+    jmp1Loc2 <- jumploc1
+    jmp1Loc3 <- jumploc1+1
+    jmp1Loc4 <- jumploc1+2
+    
+    ### Define wavelengths for correction of second jump
+    jmp2Loc1 <- jumploc2-1
+    jmp2Loc2 <- jumploc2
+    jmp2Loc3 <- jumploc2+1
+    jmp2Loc4 <- jumploc2+2
+    #-----------------------------------------------------------------#
+    
+    ### Read in spec file
+    out.spec <- array(0,(end.wave-start.wave)+1)       # refl or trans
     spec.file <- read.csv(paste(file.dir,dlm,ascii.files[i],sep=""))
     spectra <- spec.file[,2]
     zero.chk <- sum(spectra)
-    
+
     #---------------- Apply jump correction to spectra ----------------#
     # Check size of jumps against thresholds
     jmp1Chk.min <- abs(spectra[jmp1Loc3]-spectra[jmp1Loc2])>firstJumpMin
