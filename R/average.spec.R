@@ -5,21 +5,26 @@
 ##' @name average.spec
 ##' @title average replicate spectra within a directory of spectra files
 ##' 
-##' @param file.dir directory of spectra files to process
-##' @param out.dir output directory for processed spectra files
-##' @param start.wave starting wavelength of spectra files. 
+##' @param file.dir Directory of spectra files to process
+##' @param out.dir Output directory for processed spectra files
+##' @param start.wave Starting wavelength of spectra files. 
 ##' Not needed if specified in XML settings file.
-##' @param end.wave ending wavelength of spectra files. Not needed if 
+##' @param end.wave Ending wavelength of spectra files. Not needed if 
 ##' specified in XML settings file. 
-##' @param step.size resolution of spectra files. E.g. 1 for 1nm, 5 for 5nm. 
+##' @param step.size Resolution of spectra files. E.g. 1 for 1nm, 5 for 5nm. 
 ##' Not needed if specified in XML settings file.
-##' @param bias.threshold reflectance/transmittance cutoff to remove spectra with anartificial 
+##' @param bias.threshold Reflectance/transmittance cutoff to remove spectra with anartificial 
 ##' bias (shift) due to improper spectral collection
-##' @param suffix.length length of auto numbering attached to ASD file names.  This number of 
+##' @param suffix.length Length of auto numbering attached to ASD file names.  This number of 
 ##' characters will be removed from the filename when averaged.
-##' @param output.file.ext optional setting to set file extension of output files. Defaults to .csv
-##' @param spec.dataframe option to return a data frame with the converted spectra files 
-##' @param settings.file settings file used for spectral processing options (OPTIONAL).  
+##' @param output.file.ext Optional setting to set file extension of output files. Defaults to .csv
+##' @param spec.dataframe Option to return a data frame with the converted spectra files 
+##' @param metadata.file Option to select custom metadata file for use in processing. If not set
+##' then the information is either read from default metadata file, the settings file or at the function call. 
+##' Need to set this as the full qualified path to the spectral metadata file is using a custom file/location
+##' @param image Logical. Whether to produce .png images of each spectrum (TRUE) or not (FALSE).
+##' Default is FALSE.  Useful for diagnosing spectral observations during processing.
+##' @param settings.file Settings file used for spectral processing options (OPTIONAL).  
 ##' Contains information related to the spectra collection instrument, output directories, 
 ##' and processing options such as applying a jump correction to the spectra files.  Options in the settings
 ##' file take precedent over options selected in the function call.
@@ -37,7 +42,8 @@
 ##'
 average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,
                          step.size=NULL,bias.threshold=NULL,suffix.length=NULL,
-                         output.file.ext=NULL,spec.dataframe=FALSE,settings.file=NULL){
+                         output.file.ext=NULL,metadata.file=NULL,image=FALSE,
+                         settings.file=NULL){
   ## TODO:
   # using if(any()) here to remove bad spec with threshold cutoffs
   # use directory rather than file as input to speed up output
@@ -49,8 +55,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
   
   ### Check for proper input directory
   if (is.null(settings.file) && is.null(file.dir)){
-    print("*********************************************************************************")
-    stop("******* ERROR: No input file directory given in settings file or function call. *******")
+    stop("ERROR: No input file directory given in settings file or function call.")
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
   } else if (is.null(file.dir) && !is.null(settings.file$output.dir)){
@@ -73,44 +78,26 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
   if (! file.exists(badspec.dir)) dir.create(badspec.dir,recursive=TRUE)
   
   ### Remove any previous output in out.dir
-  #unlink(list.files(paste(out.dir,dlm,"averaged_files",sep=""),full.names=TRUE),recursive=FALSE,force=TRUE)
-  #unlink(list.files(paste(out.dir,dlm,"averaged_files",dlm,"Bad_Spectra",sep=""),
-  #                  full.names=TRUE),recursive=FALSE,force=TRUE)
   unlink(list.files(out.dir,full.names=TRUE),recursive=FALSE,force=TRUE)
   unlink(list.files(badspec.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
   
-  ### Define wavelengths
-  if (is.null(settings.file) && is.null(start.wave)){
-    print("*********************************************************************************")
-    stop(paste("******* ERROR: No starting wavelength set in settings file or in function call. Starting Wavelength is: ",start.wave," *******",sep=""))
+  ### Define wavelengths.  If set in settings or function call.  Otherwise read from file header
+  if (!is.null(start.wave)){
+    start.wave <- start.wave
   } else if (!is.null(settings.file$instrument$start.wave)){
     start.wave <- as.numeric(settings.file$instrument$start.wave)
-  } else if (!is.null(start.wave)){
-    start.wave <- start.wave
   }
-  
-  if (is.null(settings.file) && is.null(end.wave)){
-    print("*********************************************************************************")
-    stop(paste("******* ERROR: No ending wavelength set in settings file or in function call. Ending Wavelength is: ",end.wave," *******",sep=""))
+  if (!is.null(end.wave)){
+    end.wave <- end.wave
   } else if (!is.null(settings.file$instrument$end.wave)){
     end.wave <- as.numeric(settings.file$instrument$end.wave)
-  } else if (!is.null(end.wave)){
-    end.wave <- end.wave
   }
-  
-  if (is.null(settings.file) && is.null(step.size)){
-    print("*********************************************************************************")
-    print("******* WARNING: No wavelength step size give in settings file or in function call. Setting to 1nm by default *******")
+  if (!is.null(step.size)){
+    step.size <- step.size
   } else if (!is.null(settings.file$instrument$step.size)){
     step.size <- as.numeric(settings.file$instrument$step.size)
-  } else if (!is.null(step.size)){
-    step.size <- step.size
   }
-  
-  ### Setup wavelengths for output
-  lambda = seq(start.wave,end.wave,step.size)
-  waves <- paste("Wave_",lambda,sep="")
-  
+
   ### Look for a custom output extension, otherwise use default
   if (is.null(settings.file$options$output.file.ext) && is.null(output.file.ext)){
     output.file.ext <- ".csv"  # <-- Default
@@ -122,8 +109,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
   
   ### Define suffix length.  Needed to properly subset spectra by groups for averaging replicates
   if (is.null(settings.file$options$suffix.length) && is.null(suffix.length)){
-    print("*********************************************************************************")
-    stop("******* ERROR: File suffix length not defined.  Please set in settings file or at function call before continuing *******")
+    stop("ERROR: File suffix length not defined.  Please set in settings file or at function call before continuing")
   } else if (!is.null(suffix.length)){
     suffix.length <- suffix.length
   } else if (!is.null(settings.file$options$suffix.length)){
@@ -132,7 +118,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
   
   ### Define bias threshold
   if (is.null(settings.file$options$bias.threshold) && is.null(bias.threshold)){
-    print("******** WARNING: Bias threshold not set.  Defaulting to 0.06 ********")
+    warning("Bias threshold not set.  Defaulting to 0.06")
     bias.threshold <- 0.06
   } else if (!is.null(bias.threshold)){
     bias.threshold <- bias.threshold
@@ -148,7 +134,6 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
 
   ### Check whether files exist. STOP if files missing and display an error
   if (num.files<1){
-    print("*********************************************************************************")
     stop(paste("******* ERROR: No ASCII files found in directory with extension: ",output.file.ext," *******",sep=""))
   }
   
@@ -159,6 +144,32 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
                 "Failed Outlier Test (Yes/No)?")
   
   #-------------------------- Start average loop --------------------------# 
+  
+  ### Spectra metadata.
+  if (is.null(metadata.file)) {
+    metadata.dir <- gsub(pattern="jc_files/","",file.dir)
+    metadata.file <- list.files(path=metadata.dir,pattern="metadata",full.names=FALSE)
+    print(paste("------- Using metadata file: ",metadata.file,sep=""))
+    metadata <- read.csv(paste(settings.file$output.dir,dlm,metadata.file,sep=""))
+  } else {
+    metadata <- read.csv(metadata.file,header=T)
+  }
+  
+  ### Setup wavelengths
+  if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
+    # Using metadata info.  Read from first observations. Assumes all files are the same.
+    # Need to update function to make this work across varying wavelength ranges
+    start.wave <- metadata[1,]$Calibrated_Starting_Wavelength
+    step.size <- metadata[1,]$Calibrated_Wavelength_Step
+    channels <- metadata[1,]$Detector_Channels
+    end.wave <- start.wave+((channels-1)/step.size)
+    lambda <- seq(start.wave,end.wave,step.size)
+    waves <- paste("Wave_",lambda,sep="")
+  } else {
+    # Using settings file or function argument
+    lambda <- seq(start.wave,end.wave,step.size)
+    waves <- paste("Wave_",lambda,sep="")
+  }
   
   ### Display info to console
   tmp  = unlist(strsplit(file.dir,dlm))
@@ -332,17 +343,19 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
       write.csv(out.spec,paste(badspec.dir,dlm,out.filename,sep=""),row.names=FALSE)
       
       # Output plot of bad spectra for quick reference
-      rng <- range(out.spec[,2])
-      if (rng[1]<0) rng[1] <- 0
-      if (rng[2]>1) rng[2] <- 1
-      ylimit <- c(rng[1],rng[2])
-      png(file=paste(badspec.dir,dlm,spec.name,".png",sep=""),width=800,height=600,res=100)
-      plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
+      if(image=="TRUE" | settings.file$options$diagnostic.images=="TRUE"){
+        rng <- range(out.spec[,2])
+        if (rng[1]<0) rng[1] <- 0
+        if (rng[2]>1) rng[2] <- 1
+        ylimit <- c(rng[1],rng[2])
+        png(file=paste(badspec.dir,dlm,spec.name,".png",sep=""),width=800,height=600,res=100)
+        plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
            ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
-      lines(out.spec[,1], out.spec[,2],lwd=2)
-      abline(h=bias,lty=2,col="dark grey")
-      box(lwd=2.2)
-      dev.off()
+        lines(out.spec[,1], out.spec[,2],lwd=2)
+        abline(h=bias,lty=2,col="dark grey")
+        box(lwd=2.2)
+        dev.off()
+      }
     } 
     rm(spec.name,out.spec,out.filename,dims)
   } # End of output of bad spectra
@@ -365,17 +378,19 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
       write.csv(out.spec,paste(out.dir,dlm,out.filename,sep=""),row.names=FALSE)
       
       ### Output plot of average spectra for quick reference
-      rng <- range(out.spec[,2])
-      if (rng[1]<0) rng[1] <- 0
-      if (rng[2]>1) rng[2] <- 1
-      ylimit <- c(rng[1],rng[2])
-      png(file=paste(out.dir,dlm,spec.name,".png",sep=""),width=800,height=600,res=100)
-      plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
-           ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
-      lines(out.spec[,1], out.spec[,2],lwd=2)
-      abline(h=bias,lty=2,col="dark grey")
-      box(lwd=2.2)
-      dev.off()
+      if(image=="TRUE" | settings.file$options$diagnostic.images=="TRUE"){
+        rng <- range(out.spec[,2])
+        if (rng[1]<0) rng[1] <- 0
+        if (rng[2]>1) rng[2] <- 1
+        ylimit <- c(rng[1],rng[2])
+        png(file=paste(out.dir,dlm,spec.name,".png",sep=""),width=800,height=600,res=100)
+        plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
+            ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
+        lines(out.spec[,1], out.spec[,2],lwd=2)
+        abline(h=bias,lty=2,col="dark grey")
+        box(lwd=2.2)
+        dev.off()
+      }
     }
     rm(spec.name,out.spec,out.filename,dims)
   }
@@ -388,15 +403,17 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
   
   ### Output plot of averaged spectra for quick reference
   dims <- dim(spec.avg)
-  if (dims[1]>0){
-    plot.data <- as.matrix(spec.avg[,2:dims[2]])
-    png(file=paste(out.dir,dlm,"Averaged_Spectra",".png",sep=""),width=800,height=600,res=100)
-    matplot(seq(start.wave,end.wave,step.size), t(plot.data),cex=0.01,xlim=c(350,2500),
-            xlab="Wavelength (nm)",ylab="Reflectance (%)", main="Averaged Spectra",
-            cex.axis=1.3,cex.lab=1.3, type="l",lwd=1.5)
-    abline(h=bias,lty=2,col="dark grey")
-    box(lwd=2.2)
-    dev.off()
+  if(image=="TRUE" | settings.file$options$diagnostic.images=="TRUE"){
+    if (dims[1]>0){
+      plot.data <- as.matrix(spec.avg[,2:dims[2]])
+      png(file=paste(out.dir,dlm,"Averaged_Spectra",".png",sep=""),width=800,height=600,res=100)
+      matplot(seq(start.wave,end.wave,step.size), t(plot.data),cex=0.01,xlim=c(350,2500),
+              xlab="Wavelength (nm)",ylab="Reflectance (%)", main="Averaged Spectra",
+              cex.axis=1.3,cex.lab=1.3, type="l",lwd=1.5)
+      abline(h=bias,lty=2,col="dark grey")
+      box(lwd=2.2)
+      dev.off()
+    }
   }
   
   setTxtProgressBar(pb, 100)  # show progress bar
@@ -405,9 +422,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
   print("")
   
   ### Return dataframe of spectra if requested
-  if (spec.dataframe) {
-    return(spec.avg)
-  }
+  invisible(spec.avg)
   
 } ### End of function
 #==================================================================================================#

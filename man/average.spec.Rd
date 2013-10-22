@@ -5,40 +5,52 @@
   average.spec(file.dir = NULL, out.dir = NULL,
     start.wave = NULL, end.wave = NULL, step.size = NULL,
     bias.threshold = NULL, suffix.length = NULL,
-    output.file.ext = NULL, spec.dataframe = FALSE,
-    settings.file = NULL)
+    output.file.ext = NULL, metadata.file = NULL,
+    image = FALSE, settings.file = NULL)
 }
 \arguments{
-  \item{file.dir}{directory of spectra files to process}
+  \item{file.dir}{Directory of spectra files to process}
 
-  \item{out.dir}{output directory for processed spectra
+  \item{out.dir}{Output directory for processed spectra
   files}
 
-  \item{start.wave}{starting wavelength of spectra files.
+  \item{start.wave}{Starting wavelength of spectra files.
   Not needed if specified in XML settings file.}
 
-  \item{end.wave}{ending wavelength of spectra files. Not
+  \item{end.wave}{Ending wavelength of spectra files. Not
   needed if specified in XML settings file.}
 
-  \item{step.size}{resolution of spectra files. E.g. 1 for
+  \item{step.size}{Resolution of spectra files. E.g. 1 for
   1nm, 5 for 5nm. Not needed if specified in XML settings
   file.}
 
-  \item{bias.threshold}{reflectance/transmittance cutoff to
+  \item{bias.threshold}{Reflectance/transmittance cutoff to
   remove spectra with anartificial bias (shift) due to
   improper spectral collection}
 
-  \item{suffix.length}{length of auto numbering attached to
+  \item{suffix.length}{Length of auto numbering attached to
   ASD file names.  This number of characters will be
   removed from the filename when averaged.}
 
-  \item{output.file.ext}{optional setting to set file
+  \item{output.file.ext}{Optional setting to set file
   extension of output files. Defaults to .csv}
 
-  \item{spec.dataframe}{option to return a data frame with
+  \item{spec.dataframe}{Option to return a data frame with
   the converted spectra files}
 
-  \item{settings.file}{settings file used for spectral
+  \item{metadata.file}{Option to select custom metadata
+  file for use in processing. If not set then the
+  information is either read from default metadata file,
+  the settings file or at the function call. Need to set
+  this as the full qualified path to the spectral metadata
+  file is using a custom file/location}
+
+  \item{image}{Logical. Whether to produce .png images of
+  each spectrum (TRUE) or not (FALSE). Default is FALSE.
+  Useful for diagnosing spectral observations during
+  processing.}
+
+  \item{settings.file}{Settings file used for spectral
   processing options (OPTIONAL). Contains information
   related to the spectra collection instrument, output
   directories, and processing options such as applying a

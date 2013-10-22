@@ -24,6 +24,9 @@
 ##' @param output.file.ext option to set file extension of the output files. Defaults to .csv
 ##' @param metadata.file Option to select custom metadata file for use in processing. If not set
 ##' then the information is either read from default metadata file, the settings file or at the function call. 
+##' Need to set this as the full qualified path to the spectral metadata file is using a custom file/location
+##' @param image Logical. Whether to produce .png images of each spectrum (TRUE) or not (FALSE).
+##' Default is FALSE.  Useful for diagnosing spectral observations during processing.
 ##' @param settings.file settings file used for spectral processing options (OPTIONAL).  
 ##' Contains information related to the spectra collection instrument, output directories, 
 ##' and processing options such as applying a jump correction to the spectra files.  
@@ -42,7 +45,7 @@
 ##'
 jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,end.wave=NULL,step.size=NULL,
                            jumploc1=NULL,jumploc2=NULL,firstJumpMax=NULL,secondJumpMax=NULL,
-                           output.file.ext=NULL,metadata.file=NULL,settings.file=NULL){
+                           output.file.ext=NULL,metadata.file=NULL,image=FALSE,settings.file=NULL){
   
   # TODO: implement the use of a settings file in this function. Allow adjustment of 
   # JC thresholds (below)
@@ -121,11 +124,7 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
   } else if (!is.null(settings.file$instrument$step.size)){
     step.size <- as.numeric(settings.file$instrument$step.size)
   }
-  # Set wavelength range
-  #if (!is.null(start.wave) & !is.null(end.wave) & !is.null(step.size)) {
-  #  lambda <- seq(start.wave,end.wave,step.size)
-  #}
-  
+
   ### Find files to process
   ascii.files <- list.files(path=file.dir,pattern=output.file.ext,full.names=FALSE)
   num.files  <- length(ascii.files)
@@ -136,10 +135,15 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
     stop(paste("No spec files found in directory with extension: ",output.file.ext,sep=""))
   }
   
-  ### Spectra metadata.  NEED TO MAKE MORE GENERAL
-  metadata.file <- list.files(path=settings.file$output.dir,pattern="metadata",full.names=FALSE)
-  print(paste("------- Using metadata file: ",metadata.file,sep=""))
-  metadata <- read.csv(paste(settings.file$output.dir,dlm,metadata.file,sep=""))
+  ### Spectra metadata.
+  if (is.null(metadata.file)) {
+    metadata.dir <- gsub(pattern="jc_files/","",out.dir)
+    metadata.file <- list.files(path=metadata.dir,pattern="metadata",full.names=FALSE)
+    print(paste("------- Using metadata file: ",metadata.file,sep=""))
+    metadata <- read.csv(paste(settings.file$output.dir,dlm,metadata.file,sep=""))
+  } else {
+    metadata <- read.csv(metadata.file,header=T)
+  }
 
   ### Display info to the terminal
   tmp  <- unlist(strsplit(file.dir,dlm))
@@ -329,16 +333,20 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
       write.csv(out.spec,paste(badspec.dir,dlm,out.filename,sep=""),row.names=FALSE)
         
       # Output plot of uncorrected spectra for quick reference
-      rng <- range(out.spec[,2])
-      if (rng[1]<0) rng[1] <- 0
-      if (rng[2]>1) rng[2] <- 1
-      ylimit <- c(rng[1],rng[2])
-      png(file=paste(badspec.dir,dlm,tmp[1],".png",sep=""),width=800,height=600,res=100)
-      plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
-             ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
-      lines(out.spec[,1], out.spec[,2],lwd=2)
-      box(lwd=2.2)
-      dev.off()
+      # Create output images if requested
+      if(image=="TRUE" | settings.file$options$diagnostic.images=="TRUE"){
+        rng <- range(out.spec[,2])
+        if (rng[1]<0) rng[1] <- 0
+        if (rng[2]>1) rng[2] <- 1
+        ylimit <- c(rng[1],rng[2])
+        png(file=paste(badspec.dir,dlm,tmp[1],".png",sep=""),width=800,height=600,res=100)
+        plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
+              ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
+        lines(out.spec[,1], out.spec[,2],lwd=2)
+        box(lwd=2.2)
+        dev.off()
+        rm(rng)
+      }
       
       ### Corrected spectra
     } else {
@@ -350,16 +358,20 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
       write.csv(out.spec,paste(out.dir,dlm,out.filename,sep=""),row.names=FALSE)
         
       # Output plot of spectra for quick reference
-      rng <- range(out.spec[,2])
-      if (rng[1]<0) rng[1] <- 0
-      if (rng[2]>1) rng[2] <- 1
-      ylimit <- c(rng[1],rng[2])
-      png(file=paste(out.dir,dlm,tmp[1],".png",sep=""),width=800,height=600,res=100)
-      plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
-            ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
-      lines(out.spec[,1], out.spec[,2],lwd=2)
-      box(lwd=2.2)
-      dev.off()
+      # Create output images if requested
+      if(image=="TRUE" | settings.file$options$diagnostic.images=="TRUE"){
+        rng <- range(out.spec[,2])
+        if (rng[1]<0) rng[1] <- 0
+        if (rng[2]>1) rng[2] <- 1
+        ylimit <- c(rng[1],rng[2])
+        png(file=paste(out.dir,dlm,tmp[1],".png",sep=""),width=800,height=600,res=100)
+        plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
+              ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
+        lines(out.spec[,1], out.spec[,2],lwd=2)
+        box(lwd=2.2)
+        dev.off()
+        rm(rng)
+      }
     }  ### End if/else
     
       setTxtProgressBar(pb, j)                      # show progress bar
@@ -367,7 +379,7 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
       flush.console()                               #<--- show output in real-time
     
     ### Remove temp vars
-    rm(zero.chk,rng,out.spec,tmp,spec.file,jmp1flag,jmp2flag,jc)
+    rm(zero.chk,out.spec,tmp,spec.file,jmp1flag,jmp2flag,jc)
         
   } ### End jc loop
   close(pb)

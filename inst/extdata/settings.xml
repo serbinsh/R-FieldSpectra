@@ -9,10 +9,10 @@
      <start.wave>350</start.wave>
      <end.wave>2500</end.wave>
      <step.size>1</step.size>
-     <!-- Location of first splice correction -->
-     <jumploc1>651</jumploc1>
-     <!-- Location of second splice correction. For 1800nm set to 1451, for 1830nm set to 1481 -->
-     <jumploc2>1451</jumploc2>
+     <!-- Location (wavelength) of first splice correction. Usually 1000nm -->
+     <jumploc1>1000</jumploc1>
+     <!-- Location (wavelength) of second splice correction. Often 1800 or 1830nm -->
+     <jumploc2>1800</jumploc2>
   </instrument>
   <options>
      <!-- Apply jump correction to spectra? TRUE/FALSE -->
@@ -27,8 +27,10 @@
      <!-- Spectra cutoff for artificial bias.  Results from improper leaf placement in leaf clip or erroneous measurement -->
      <bias.threshold>0.06</bias.threshold>
      <!-- Option to set input asd file extension of spectra files -->
-     <asd.file.ext>.asd</asd.file.ext>
+     <spec.file.ext>.asd</spec.file.ext>
      <!-- Option to set file extension of output spectra files -->
      <output.file.ext>.csv</output.file.ext>
+     <!-- Create diagnostic images (.png) for each spectra during processing -->
+     <diagnostic.images>FALSE</diagnostic.images>
   </options>
 </settings>

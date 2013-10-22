@@ -6,7 +6,7 @@
     spec.type = NULL, start.wave = NULL, end.wave = NULL,
     step.size = NULL, image = FALSE,
     spec.file.ext = ".asd", output.file.ext = ".csv",
-    settings.file = NULL)
+    get.metadata = TRUE, settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{A single ASD binary file or directory of
@@ -35,14 +35,20 @@
   header.  If selected for larger size than raw data,
   spectrum is interpolated (not yet availible)}
 
-  \item{image}{Logical. Whether to produce png images of
-  each spectrum (TRUE) or not (FALSE)}
+  \item{image}{Logical. Whether to produce .png images of
+  each spectrum (TRUE) or not (FALSE). Default is FALSE.
+  Useful for diagnosing spectral observations during
+  processing.}
 
   \item{spec.file.ext}{file extension of ASD files.
   Usually ".asd" (Default)}
 
   \item{output.file.ext}{optional setting to set file
   extension to output files. Defaults to .csv}
+
+  \item{get.metadata}{Logical. Run extract.metadata when
+  importing .asd files and place information in a metadata
+  file? TRUE/FALSE.  Default is TRUE}
 
   \item{settings.file}{settings file used for spectral
   processing options (OPTIONAL). Contains information
@@ -66,6 +72,9 @@
 # Set input file
 file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
 spec <- read.asd(file.dir,out.dir='~',start.wave=350,end.wave=2500,step.size=1)
+
+# Get info from file header
+spec <- read.asd(file.dir,out.dir='~')
 
 # Plot output
 plot(spec$Wavelength,spec$Spectra,type="l",lwd=2,xlab="Wavelength (nm)", ylab="Reflectance (\%)")

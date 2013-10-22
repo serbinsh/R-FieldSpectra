@@ -17,9 +17,12 @@
 ##' @param step.size Optional. Wavelength step size for ASD files. E.g. 1nm, 5nm, 10nm
 ##' If not set then read from file header.  If selected for larger size than raw data, spectrum is interpolated
 ##' (not yet availible)
-##' @param image Logical. Whether to produce png images of each spectrum (TRUE) or not (FALSE)
+##' @param image Logical. Whether to produce .png images of each spectrum (TRUE) or not (FALSE).
+##' Default is FALSE.  Useful for diagnosing spectral observations during processing.
 ##' @param spec.file.ext file extension of ASD files.  Usually ".asd" (Default)
 ##' @param output.file.ext optional setting to set file extension to output files. Defaults to .csv
+##' @param get.metadata Logical. Run extract.metadata when importing .asd files and place information
+##' in a metadata file? TRUE/FALSE.  Default is TRUE
 ##' @param settings.file settings file used for spectral processing options (OPTIONAL).  
 ##' Contains information related to the spectra collection instrument, output directories, 
 ##' and processing options such as applying a jump correction to the spectra files.  Options in the settings
@@ -47,7 +50,7 @@
 ##'
 read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,end.wave=NULL,
                      step.size=NULL,image=FALSE,spec.file.ext=".asd",output.file.ext=".csv",
-                     settings.file=NULL){
+                     get.metadata=TRUE,settings.file=NULL){
 
   ## TODO: Reformat function for speed.  Read in all data to array then generate output spec and images.
   # Rathter than reading/writing for each file in serial
@@ -67,7 +70,7 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
   
   ### create output directory if it doesn't already exist and is set
   if (!is.null(out.dir)) {
-    out.dir <- out.dir
+    out.dir <- paste0(out.dir, dlm, "ascii_files/")
   } else if (!is.null(settings.file$output.dir)) {
     out.dir <- paste0(settings.file$output.dir, dlm, "ascii_files/")
   }
@@ -126,6 +129,11 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
   }
   
   #--------------------- Begin function -----------------------#
+  
+  ### Run extract.metadata
+  #print(file.dir)
+  extract.metadata(file.dir=file.dir,out.dir=gsub(pattern="ascii_files/","",out.dir),instrument="ASD",
+                   spec.file.ext=spec.file.ext,output.file.ext=output.file.ext)
   
   ### Check whether passed a single file or a directory of files
   check <- file.info(file.dir)
@@ -230,8 +238,9 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
       }
 
       ### Output plot of spectra for quick reference
-      # First setup plot bounds
-      if(image){
+      # Create images if requested
+      if(image=="TRUE" | settings.file$options$diagnostic.images=="TRUE"){
+        # First setup plot bounds
         rng <- range(output.spectra[, 2])
         if (rng[1]<0) rng[1] <- 0
         if (rng[2]>1) rng[2] <- 1

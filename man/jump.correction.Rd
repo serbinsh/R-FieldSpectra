@@ -4,16 +4,21 @@
 occurs at the boundaries between detectors}
 \usage{
   jump.correction(file.dir = NULL, out.dir = NULL,
-    start.wave = NULL, end.wave = NULL, step.size = NULL,
-    jumploc1 = NULL, jumploc2 = NULL, firstJumpMax = NULL,
-    secondJumpMax = NULL, output.file.ext = NULL,
-    settings.file = NULL)
+    spec.type = NULL, start.wave = NULL, end.wave = NULL,
+    step.size = NULL, jumploc1 = NULL, jumploc2 = NULL,
+    firstJumpMax = NULL, secondJumpMax = NULL,
+    output.file.ext = NULL, metadata.file = NULL,
+    image = FALSE, settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{directory of spectra files to process}
 
   \item{out.dir}{output directory for processed spectra
   files}
+
+  \item{spec.type}{[Optional] Option to set the type of
+  spectra being processed. Options: "Reflectance" or
+  "Transmittance" Defaults to "Reflectance"}
 
   \item{start.wave}{starting wavelength of spectra files.
   Not needed if specified in XML settings file.}
@@ -25,13 +30,13 @@ occurs at the boundaries between detectors}
   1nm, 5 for 5nm. Not needed if specified in settings
   file.}
 
-  \item{jumploc1}{location of the first jump in the spectra
-  to correct. Not needed if jump.correction=FALSE or if
-  specified in XML settings file.}
+  \item{jumploc1}{Wavelength location of the first jump in
+  the spectra to correct. Not needed if specified in XML
+  settings file.}
 
-  \item{jumploc2}{location of the second jump in the
-  spectra to correct. Not needed if jump.correction=FALSE
-  or if specified in XML settings file.}
+  \item{jumploc2}{Wavelength location of the second jump in
+  the spectra to correct. Not needed if specified in XML
+  settings file.}
 
   \item{firstJumpMax}{maximum jump threshold for the first
   jump location. Determines whether spectra will be
@@ -43,6 +48,18 @@ occurs at the boundaries between detectors}
 
   \item{output.file.ext}{option to set file extension of
   the output files. Defaults to .csv}
+
+  \item{metadata.file}{Option to select custom metadata
+  file for use in processing. If not set then the
+  information is either read from default metadata file,
+  the settings file or at the function call. Need to set
+  this as the full qualified path to the spectral metadata
+  file is using a custom file/location}
+
+  \item{image}{Logical. Whether to produce .png images of
+  each spectrum (TRUE) or not (FALSE). Default is FALSE.
+  Useful for diagnosing spectral observations during
+  processing.}
 
   \item{settings.file}{settings file used for spectral
   processing options (OPTIONAL). Contains information
@@ -60,8 +77,7 @@ occurs at the boundaries between detectors}
 }
 \examples{
 \dontrun{
-jump.correction()
-jump.correction(file.dir,out.dir, start.wave=350,end.wave=2500,step.size=1,jumploc1=651,jumploc2=1451,
+jump.correction(file.dir,out.dir='~', start.wave=350,end.wave=2500,step.size=1,jumploc1=651,jumploc2=1451,
 output.file.ext=".csv",settings.file=NULL)
 }
 }
