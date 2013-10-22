@@ -148,8 +148,8 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
     wave.range <- as.character(extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),spec.file.ext=spec.file.ext)$Wavelength_Range)
     channels <- as.numeric(as.character(droplevels(extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),spec.file.ext=spec.file.ext)$Detector_Channels)))
-    start.wave <- as.numeric((strsplit(wave.range,",")[[1]])[1])
-    end.wave <- as.numeric((strsplit(wave.range,",")[[1]])[2])
+    start.wave <- as.numeric((strsplit(wave.range,"-")[[1]])[1])
+    end.wave <- as.numeric((strsplit(wave.range,"-")[[1]])[2])
     step.size <- ((end.wave-start.wave)+1)/channels
     lambda <- seq(start.wave,end.wave,step.size)
   } else {

@@ -648,6 +648,7 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     radcal[i] <- gsub(" ","",(strsplit(file.head[15],":")[[1]])[2])
     units[i] <- gsub(" ","",(strsplit(file.head[16],":")[[1]])[2])
     wave.range[i] <- gsub(" ","",(strsplit(file.head[17],":")[[1]])[2])
+    wave.range[i] <- gsub(",","-",wave.range[i])
     lat[i] <- gsub(" ","",(strsplit(file.head[18],":")[[1]])[2])
     long[i] <- gsub(" ","",(strsplit(file.head[19],":")[[1]])[2])
     alt[i] <- gsub(" ","",(strsplit(file.head[20],":")[[1]])[2])
