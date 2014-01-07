@@ -599,7 +599,7 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
   out.head <- c("File_Name","Instrument","Detectors","Measurement", "Date", "Time", "Temperature",
                 "Battery_Voltage","Averages","Integration","Dark_Mode","Foreoptic","Radiometric_Calibration",
                 "Units","Spec_Units","Wavelength_Range","Detector_Channels","Cal_Ref_Correction_File","Num_Data_Columns",
-                "Data_Line","Latitude_DD","Longitude_DD","Altitude_m","GPS_Time_UTC","Num_Satellites")
+                "Data_Line","Latitude_DD","Longitude_DD","Altitude_m","GPS_Time_UTC","Num_Satellites","Comments")
   
   # Determine if running on single file or directory
   check <- file.info(file.dir)
@@ -626,11 +626,12 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
   long <- rep(NA,length(se.files));alt <- rep(NA,length(se.files));GPS.time <- rep(NA,length(se.files))
   satellites <- rep(NA,length(se.files));cal.ref.cor.file <- rep(NA,length(se.files))
   channels <- rep(NA,length(se.files));data.columns <- rep(NA,length(se.files));data.line <- rep(NA,length(se.files))
-  spec.units <- rep(NA,length(se.files))
+  spec.units <- rep(NA,length(se.files));comments <- rep(NA,length(se.files))
   
   # Run metadata extraction
   for (i in 1:length(se.files)){
-    data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[2],":")[[1]]
+    #data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[2],":")[[1]]
+    data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[1],":")[[1]]
     data.line[i] <- as.numeric(data.line.temp[1])
     file.head <- readLines(se.files[i],n=data.line[i]-1)
 
@@ -667,13 +668,16 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     } else {
       spec.units[i] <- "0-1"
     }
+    
+    comments[i] <- gsub(" ","",(strsplit(file.head[1],":")[[1]])[2])
+
     rm(data.line.temp,file.head,temp.1,temp.2,temp.3)
   }
 
   # Create output
   out.metadata <- data.frame(se.files.names,inst,detec,meas,date,time,temp,batt,avg,int,dm,foreoptic,radcal,
                              units,spec.units,wave.range,channels,cal.ref.cor.file,data.columns,data.line,
-                             lat,long,alt,GPS.time,satellites)
+                             lat,long,alt,GPS.time,satellites,comments)
   names(out.metadata) <- out.head
   
   if(!is.null(out.dir)){

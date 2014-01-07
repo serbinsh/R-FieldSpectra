@@ -136,8 +136,8 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
                 "Failed Outlier Test (Yes/No)?")
   
   ### Display info to console
-  tmp  = unlist(strsplit(file.dir,dlm))
-  current = tmp[length(tmp)]
+  tmp  <- unlist(strsplit(file.dir,dlm))
+  current <- tmp[length(tmp)]
   print(paste("----- Processing directory: ",current) )
   flush.console() #<--- show output in real-time
   
@@ -194,7 +194,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   
   ### Do initial checks on spectra
   # find white refs
-  wht.ref <- which(rowMeans(in.spec2)>0.9)
+  wht.ref <- which(rowMeans(in.spec2)>0.97) # should change this to an option.  I.e. allow user to select WR criteria
   rm(in.spec,in.spec2)
   wht.ref.spec <- droplevels(in.spec3[wht.ref,])
   
@@ -204,14 +204,18 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   bad.spec.temp <- which(in.spec3$Wave_450>bias)
   bad.spec.temp <- bad.spec.temp[-which(bad.spec.temp %in% wht.ref)] # get rid of wr rows
   bad.spec <- droplevels(in.spec3[bad.spec.temp,])
+  
   # Create good.spec data
-  good.spec <- droplevels(in.spec3[which(in.spec3$Wave_450<=bias),])
+  good.spec.temp <- which(in.spec3$Wave_450<=bias)
+  good.spec.temp <- good.spec.temp[-which(good.spec.temp %in% wht.ref)] # get rid of wr rows
+  #good.spec <- droplevels(in.spec3[which(in.spec3$Wave_450<=bias),])
+  good.spec <- droplevels(in.spec3[good.spec.temp,])                          
   dims <- dim(good.spec)
   check <- length(wht.ref)+dim(good.spec)[1]+dim(bad.spec)[1]==dim(in.spec3)[1]
   
   # temporary debugging flag
   if (check==FALSE) {
-    stop("Error in checking spectra. White Ref+Good Spec+Bad Spec != Total spec")
+    stop("Error in checking spectra. White Ref + Good Spec + Bad Spec != Total spec")
   }
   
   ### Update diagnostic info
