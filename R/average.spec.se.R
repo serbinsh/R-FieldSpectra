@@ -171,9 +171,14 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
                                                                       spec.file.ext=spec.file.ext)$Num_Data_Columns)))
   data.line <- extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),spec.file.ext=spec.file.ext)$Data_Line
   for (i in 1:num.files){ 
+    spec.units <- as.character(extract.metadata(file.dir=paste0(file.dir,"/",se.files[i]),spec.file.ext=spec.file.ext)$Spec_Units)
     spec.file <- read.table(paste(file.dir,dlm,se.files[i],sep=""),header=F,skip=data.line+1)
-    in.spec[i,] <- spec.file[,data.columns]
-    rm(spec.file)
+    if (spec.units=="Percent"){
+      in.spec[i,] <- (spec.file[,data.columns])*.01
+    } else {
+      in.spec[i,] <- spec.file[,data.columns]
+    }
+    rm(spec.units,spec.file)
   }
   
   ### Setup spectra for averaging.
@@ -207,9 +212,13 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   
   # Create good.spec data
   good.spec.temp <- which(in.spec3$Wave_450<=bias)
-  good.spec.temp <- good.spec.temp[-which(good.spec.temp %in% wht.ref)] # get rid of wr rows
+  good.spec.temp2 <- good.spec.temp[-which(good.spec.temp %in% wht.ref)] # get rid of wr rows
   #good.spec <- droplevels(in.spec3[which(in.spec3$Wave_450<=bias),])
-  good.spec <- droplevels(in.spec3[good.spec.temp,])                          
+  if (length(good.spec.temp2)>0){
+    good.spec <- droplevels(in.spec3[good.spec.temp2,])  
+  } else {
+    good.spec <- droplevels(in.spec3[good.spec.temp,])       
+  }              
   dims <- dim(good.spec)
   check <- length(wht.ref)+dim(good.spec)[1]+dim(bad.spec)[1]==dim(in.spec3)[1]
   

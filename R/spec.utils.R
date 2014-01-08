@@ -631,7 +631,9 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
   # Run metadata extraction
   for (i in 1:length(se.files)){
     #data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[2],":")[[1]]
-    data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[1],":")[[1]]
+    #data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[1],":")[[1]]
+    data.line.temp <- system(paste("grep -n","Data", se.files[i]),intern=TRUE)
+    data.line.temp <- strsplit(data.line.temp,":")[[length(data.line.temp)]]
     data.line[i] <- as.numeric(data.line.temp[1])
     file.head <- readLines(se.files[i],n=data.line[i]-1)
 
@@ -662,7 +664,7 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     
     temp.1 <- read.table(se.files[i],skip=data.line[i],nrows=1,sep="\t")
     temp.2 <- apply(temp.1, 1, function(x) pmatch("Reflect",x)) 
-    temp.3 <- gsub("Reflect.", "", temp.1[temp.2])
+    temp.3 <- gsub(" ","",gsub("Reflect.", "", temp.1[temp.2][[1]]))
     if (temp.3=="%"){
       spec.units[i] <- "Percent"
     } else {
