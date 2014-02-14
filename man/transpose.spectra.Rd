@@ -3,10 +3,9 @@
 \title{Transpose spectra file(s) from/to row or column major format.  Works with either a
 single spectrum or directory of spectral observations.}
 \usage{
-  transpose.spectra(file.dir = NULL, input.file = NULL,
-    out.dir = NULL, out.filename = NULL,
-    in.file.ext = ".csv", out.file.ext = ".csv",
-    header = FALSE)
+transpose.spectra(file.dir = NULL, input.file = NULL, out.dir = NULL,
+  out.filename = NULL, in.file.ext = ".csv", out.file.ext = ".csv",
+  header = FALSE)
 }
 \arguments{
   \item{file.dir}{directory of spectra files to process}
@@ -32,11 +31,9 @@ single spectrum or directory of spectral observations.}
   line?}
 }
 \description{
-  Transpose spectra file(s) from/to row or column major
-  format.  Works with either a single spectrum or directory
-  of spectral observations.
+
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

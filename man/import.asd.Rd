@@ -2,11 +2,10 @@
 \alias{import.asd}
 \title{Import raw binary ASD spectra files}
 \usage{
-  import.asd(asd.dir = NULL, output.dir = NULL,
-    jump.correction = FALSE, average = FALSE,
-    start.wave = NULL, end.wave = NULL, step.size = NULL,
-    jumploc1 = NULL, jumploc2 = NULL, asd.file.ext = NULL,
-    output.file.ext = NULL, settings.file = NULL)
+import.asd(asd.dir = NULL, output.dir = NULL, jump.correction = FALSE,
+  average = FALSE, start.wave = NULL, end.wave = NULL, step.size = NULL,
+  jumploc1 = NULL, jumploc2 = NULL, asd.file.ext = NULL,
+  output.file.ext = NULL, settings.file = NULL)
 }
 \arguments{
   \item{asd.dir}{directory containing raw ASD files or
@@ -57,13 +56,12 @@
   function call.}
 }
 \description{
-  A wrapper function to import raw binary ASD spectra
-  files, apply jump correction to the imported files and
-  average replicate files into a single spectrum.  Calls
-  read.asd(), jump.correction(), and average.spec()
-  functions.
+A wrapper function to import raw binary ASD spectra files,
+apply jump correction to the imported files and average
+replicate files into a single spectrum.  Calls read.asd(),
+jump.correction(), and average.spec() functions.
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

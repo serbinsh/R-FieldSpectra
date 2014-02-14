@@ -2,11 +2,10 @@
 \alias{average.spec}
 \title{average replicate spectra within a directory of spectra files}
 \usage{
-  average.spec(file.dir = NULL, out.dir = NULL,
-    start.wave = NULL, end.wave = NULL, step.size = NULL,
-    bias.threshold = NULL, suffix.length = NULL,
-    output.file.ext = NULL, metadata.file = NULL,
-    image = FALSE, settings.file = NULL)
+average.spec(file.dir = NULL, out.dir = NULL, start.wave = NULL,
+  end.wave = NULL, step.size = NULL, bias.threshold = NULL,
+  suffix.length = NULL, output.file.ext = NULL, metadata.file = NULL,
+  image = FALSE, settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{Directory of spectra files to process}
@@ -59,8 +58,8 @@
   function call.}
 }
 \description{
-  Function to average replicate spectra within a directory
-  of spectra files
+Function to average replicate spectra within a directory of
+spectra files
 }
 \examples{
 \dontrun{
@@ -70,6 +69,6 @@ suffix.length=5,output.file.ext=".csv",spec.dataframe = TRUE,)
 }
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

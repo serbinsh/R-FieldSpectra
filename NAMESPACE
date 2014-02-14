@@ -1,6 +1,7 @@
-export(average.spec.se)
 export(average.spec)
+export(average.spec.se)
 export(concat.spectra)
+export(convolve.spectra)
 export(extract.metadata)
 export(import.asd)
 export(jump.correction)

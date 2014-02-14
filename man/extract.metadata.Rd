@@ -2,10 +2,9 @@
 \alias{extract.metadata}
 \title{Extract metadata for each spectra sample.  Works on a single spectra or a directory.}
 \usage{
-  extract.metadata(file.dir = NULL, out.dir = NULL,
-    instrument = NULL, spec.file.ext = NULL,
-    output.file.ext = ".csv", tz = NULL,
-    settings.file = NULL)
+extract.metadata(file.dir = NULL, out.dir = NULL, instrument = NULL,
+  spec.file.ext = NULL, output.file.ext = ".csv", tz = NULL,
+  settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{File directory or filename of single
@@ -33,23 +32,21 @@
   \item{settings.file}{[Optional] Spectral settings file}
 }
 \value{
-  output Returns a dataframe of spectral metadata
-  information
+output Returns a dataframe of spectral metadata information
 }
 \description{
-  Extract metadata for each spectra sample.  Works on a
-  single spectra or a directory.
+
 }
 \examples{
 # ASD
-file <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
+file <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpectra")
 output <- extract.metadata(file,instrument="ASD")
 
 # Spectral Evolution
-file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpec")
+file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpectra")
 output <- extract.metadata(file,instrument="SE")
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

@@ -30,7 +30,7 @@
 ##'
 ##'@examples
 ##' # Set input file
-##' file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
+##' file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpectra")
 ##' spec <- read.asd(file.dir,out.dir='~',start.wave=350,end.wave=2500,step.size=1)
 ##' 
 ##' # Get info from file header

@@ -2,11 +2,10 @@
 \alias{read.asd}
 \title{A function to import raw ASD binary files}
 \usage{
-  read.asd(file.dir = NULL, out.dir = NULL,
-    spec.type = NULL, start.wave = NULL, end.wave = NULL,
-    step.size = NULL, image = FALSE,
-    spec.file.ext = ".asd", output.file.ext = ".csv",
-    get.metadata = TRUE, settings.file = NULL)
+read.asd(file.dir = NULL, out.dir = NULL, spec.type = NULL,
+  start.wave = NULL, end.wave = NULL, step.size = NULL, image = FALSE,
+  spec.file.ext = ".asd", output.file.ext = ".csv", get.metadata = TRUE,
+  settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{A single ASD binary file or directory of
@@ -59,18 +58,18 @@
   function call.}
 }
 \value{
-  output for a single file returns a list with wavelengths
-  and measured reflectance or transmittance values.  For a
-  directory, outputs individual ascii text files with
-  wavelength and spectra values for each input ASD file.
+output for a single file returns a list with wavelengths
+and measured reflectance or transmittance values.  For a
+directory, outputs individual ascii text files with
+wavelength and spectra values for each input ASD file.
 }
 \description{
-  A function to import raw ASD binary files to ascii flat
-  file format
+A function to import raw ASD binary files to ascii flat
+file format
 }
 \examples{
 # Set input file
-file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
+file.dir <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpectra")
 spec <- read.asd(file.dir,out.dir='~',start.wave=350,end.wave=2500,step.size=1)
 
 # Get info from file header
@@ -80,6 +79,6 @@ spec <- read.asd(file.dir,out.dir='~')
 plot(spec$Wavelength,spec$Spectra,type="l",lwd=2,xlab="Wavelength (nm)", ylab="Reflectance (\%)")
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

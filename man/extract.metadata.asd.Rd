@@ -2,8 +2,7 @@
 \alias{extract.metadata.asd}
 \title{Extract metadata from raw binary ASD files. Called from extract.metadata}
 \usage{
-  extract.metadata.asd(file.dir, out.dir, spec.file.ext,
-    output.file.ext, tz)
+extract.metadata.asd(file.dir, out.dir, spec.file.ext, output.file.ext, tz)
 }
 \arguments{
   \item{file.dir}{File directory or filename of single
@@ -26,14 +25,12 @@
   is the current system timezone.}
 }
 \value{
-  output Returns output dataframe of ASD metadata
-  information
+output Returns output dataframe of ASD metadata information
 }
 \description{
-  Extract metadata from raw binary ASD files. Called from
-  extract.metadata
+
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

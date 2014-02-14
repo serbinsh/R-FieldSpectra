@@ -2,11 +2,10 @@
 \alias{average.spec.se}
 \title{average replicate spectra within a directory of spectra files}
 \usage{
-  average.spec.se(file.dir = NULL, out.dir = NULL,
-    spec.type = NULL, spec.file.ext = NULL,
-    start.wave = NULL, end.wave = NULL, step.size = NULL,
-    bias.threshold = NULL, suffix.length = NULL,
-    output.file.ext = NULL, settings.file = NULL)
+average.spec.se(file.dir = NULL, out.dir = NULL, spec.type = NULL,
+  spec.file.ext = NULL, start.wave = NULL, end.wave = NULL,
+  step.size = NULL, bias.threshold = NULL, suffix.length = NULL,
+  output.file.ext = NULL, settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{directory of spectra files to process}
@@ -52,10 +51,10 @@
   function call.}
 }
 \description{
-  Function to average replicate spectra within a directory
-  of spectra files
+Function to average replicate spectra within a directory of
+spectra files
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

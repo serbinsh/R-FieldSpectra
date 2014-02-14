@@ -23,10 +23,3 @@ License: FreeBSD + file LICENSE
 Copyright: Authors
 LazyLoad: yes
 LazyData: FALSE
-Collate:
-    'import.asd.R'
-    'read.asd.R'
-    'spec.utils.R'
-    'average.spec.R'
-    'jump.correction.R'
-    'average.spec.se.R'

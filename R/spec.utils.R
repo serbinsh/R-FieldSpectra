@@ -75,11 +75,11 @@ settings <- function(input.file=NULL){
 ##' 
 ##' @examples
 ##' # ASD
-##' file <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpec")
+##' file <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpectra")
 ##' output <- extract.metadata(file,instrument="ASD")
 ##' 
 ##' # Spectral Evolution
-##' file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpec")
+##' file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpectra")
 ##' output <- extract.metadata(file,instrument="SE")
 ##' 
 ##' @author Shawn P. Serbin
@@ -962,15 +962,85 @@ smooth.spectra <- function(file.dir=NULL,input.file=NULL,out.dir=NULL,out.filena
 #--------------------------------------------------------------------------------------------------#
 ##' 
 ##' @name convolve.spectra
-##' @title Convolve field spectral observations to airborne/satellite spectral bands/channels
+##' @title Convolve field spectral observations to airborne/satellite spectral bands/channels.
 ##' 
-##' @param
+##' @param field.spectra Input field spectra. If a single spectra then the format can be either
+##' column or row major with the wavelengths either a column of data or the column headers.  If
+##' multiple (i.e. a matrix of data) the input should be in row major format with the column headers
+##' as wavelength numbers.  See examples below.
+##' @param start.wave Starting wavelength of field spectra
+##' @param end.wave ending wavelength of field spectra
+##' @param sensor The sensor (e.g. "AVIRIS", "Landsat 5", "Landsat 7", "MODIS").  Current options
+##' are: "AVIRIS"  More to come in the future
+##' @param year [Optional] E.g. year=2011.  If the AVIRIS sensor is selected this allows the user
+##' to select a specific spectral calibration based on the year of data aquisition.
+##' Defaults to 2011.
+##' @param spc [Optional] Option to use custom spectral calibration information.  Format:
+##' band number, center wavelength, FWHM.  NOT YET IMPLEMENTED 
+##' @param output.dir [Optional] Directory to output the convolved spectral data.  If not set
+##' the results are only pasesd back to the working environment
+##' 
+##' @return output.spectra Returns a matrix of convolved spectra
+##' 
+##' @export
 ##' 
 ##' @author Shawn P. Serbin
 ##'
-convolve.spectra <- function(spectra){ 
+convolve.spectra <- function(field.spectra=NULL,start.wave=NULL,end.wave=NULL,sensor=NULL,year=NULL,
+                             spc=NULL){ 
   
+  # Determine sensor type
+  if (sensor=="AVIRIS"){
+    if (is.null(year)) {
+      sensor.file <- system.file("extdata/AVIRIS_2011_SPC_Info.csv",package="FieldSpectra")
+      sensor.spc <- read.table(sensor.file,header=F, col.names = c('Band_Number','Wavelength','FWHM'), 
+                               sep=",")
+    } else {
+      print("Not Implemented Yet")
+    } # End AVIRIS if/else
+    
+  } else {
+    print(paste0(sensor,":"," Not Implemented Yet"))
+  } ## End main if/else
+  
+  ## Convert field spectra to matrix
+  field.spectra <- as.matrix(field.spectra)
+  # Temp
+  #field.spectra <- field.spectra[1,]
+  
+  ## 
+  wvlArr <- as.array(sensor.spc[,2])
+  fwhArr <- as.array(sensor.spc[,3])
+  fs_wvArr <- as.array(seq(start.wave,end.wave,1))
+  keep <- which(round(wvlArr) %in% fs_wvArr,arr.ind=T)
+  wvlArr <- wvlArr[keep]
+  fwhArr <- fwhArr[keep]
+  convArr <- as.vector(rep(NA,1,length(fwhArr)))
+  output.spectra <- array(data=NA,dim=c(dim(field.spectra)[1],length(fwhArr)))
+  
+  ## Generic convolve function
+  for (i in 1:dim(field.spectra)[1]) {
+    for (band in 1:length(wvlArr)) {
+      #print(band)
+      ### Create convolution kernel (from http://en.wikipedia.org/wiki/Gaussian_function)
+      convKern <- exp(-(fs_wvArr-wvlArr[band])^2/(2*(fwhArr[band]^2)))
+      ### Normalize the kernel
+      convKern <- convKern/sum(convKern)
+      ### Generate output band
+      convArr[band] <- sum(convKern*field.spectra[i,])
+    }
+    output.spectra[i,] <- convArr
+  } # End main for loop
+  output <- list(Wavelengths=wvlArr,Spectra=output.spectra)
+  invisible(output) # output convolved spectra
 }
+
+# for debugging
+#plot(wvlArr,convArr,type="l")
+#lines(seq(350,2500,1),unlist(field.spectra),type="l")
+
+#plot(wvlArr,output.spectra[15,],type="l")
+#lines(seq(350,2500,1),unlist(field.spectra[15,]),type="l")
 #==================================================================================================#
 
 

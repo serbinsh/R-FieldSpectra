@@ -3,12 +3,11 @@
 \title{apply a jump (splice) correction to imported ASD spectra files. This splice or jump
 occurs at the boundaries between detectors}
 \usage{
-  jump.correction(file.dir = NULL, out.dir = NULL,
-    spec.type = NULL, start.wave = NULL, end.wave = NULL,
-    step.size = NULL, jumploc1 = NULL, jumploc2 = NULL,
-    firstJumpMax = NULL, secondJumpMax = NULL,
-    output.file.ext = NULL, metadata.file = NULL,
-    image = FALSE, settings.file = NULL)
+jump.correction(file.dir = NULL, out.dir = NULL, spec.type = NULL,
+  start.wave = NULL, end.wave = NULL, step.size = NULL, jumploc1 = NULL,
+  jumploc2 = NULL, firstJumpMax = NULL, secondJumpMax = NULL,
+  output.file.ext = NULL, metadata.file = NULL, image = FALSE,
+  settings.file = NULL)
 }
 \arguments{
   \item{file.dir}{directory of spectra files to process}
@@ -68,12 +67,12 @@ occurs at the boundaries between detectors}
   jump correction to the spectra files.}
 }
 \value{
-  output list containing processed spectra and associated
-  diagnostic information
+output list containing processed spectra and associated
+diagnostic information
 }
 \description{
-  A function to apply a jump (splice) correction to
-  imported spectra files
+A function to apply a jump (splice) correction to imported
+spectra files
 }
 \examples{
 \dontrun{
@@ -82,6 +81,6 @@ output.file.ext=".csv",settings.file=NULL)
 }
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

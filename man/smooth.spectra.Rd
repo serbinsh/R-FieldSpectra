@@ -3,9 +3,9 @@
 \title{Smooth spectra file with Savitsky-Golay smoothing filter.  Works with either a
 single spectrum or array of spectral observations in row-major format.}
 \usage{
-  smooth.spectra(file.dir = NULL, input.file = NULL,
-    out.dir = NULL, out.filename = NULL, header = TRUE,
-    p = NULL, n = NULL, length = "full", file.ext = ".csv")
+smooth.spectra(file.dir = NULL, input.file = NULL, out.dir = NULL,
+  out.filename = NULL, header = TRUE, p = NULL, n = NULL,
+  length = "full", file.ext = ".csv")
 }
 \arguments{
   \item{file.dir}{Directory of spectra files to apply
@@ -40,9 +40,7 @@ single spectrum or array of spectral observations in row-major format.}
   Default '.csv'}
 }
 \description{
-  Smooth spectra file with Savitsky-Golay smoothing filter.
-  Works with either a single spectrum or array of spectral
-  observations in row-major format.
+
 }
 \examples{
 \dontrun{
@@ -52,6 +50,6 @@ smooth.spectra(file.dir=file.dir,input.file=input.file,out.dir=out.dir,out.filen
 }
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 

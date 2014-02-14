@@ -3,10 +3,9 @@
 \title{Concatenate a directory of spectra files into a single .csv file. Works on a single
 directory or a series of directories}
 \usage{
-  concat.spectra(file.dir = NULL, out.dir = NULL,
-    out.filename = NULL, in.file.ext = ".csv",
-    out.file.ext = ".csv", transpose = FALSE,
-    spec.dataframe = FALSE)
+concat.spectra(file.dir = NULL, out.dir = NULL, out.filename = NULL,
+  in.file.ext = ".csv", out.file.ext = ".csv", transpose = FALSE,
+  spec.dataframe = FALSE)
 }
 \arguments{
   \item{file.dir}{directory of spectra files to process.
@@ -35,9 +34,7 @@ directory or a series of directories}
   containing the concatenated spectral data.  TRUE/FALSE}
 }
 \description{
-  Concatenate a directory of spectra files into a single
-  .csv file. Works on a single directory or a series of
-  directories
+
 }
 \examples{
 \dontrun{
@@ -47,6 +44,6 @@ out.file.ext=".csv",transpose=FALSE,spec.dataframe=FALSE)
 }
 }
 \author{
-  Shawn P. Serbin
+Shawn P. Serbin
 }
 
