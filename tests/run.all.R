@@ -1,4 +1,4 @@
 library(testthat)
-library(FieldSpec)
+library(FieldSpectra)
 
-test_package("FieldSpec")
+test_package("FieldSpectra")

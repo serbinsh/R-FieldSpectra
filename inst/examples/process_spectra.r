@@ -1,6 +1,6 @@
 ####################################################################################################
 #
-#  	--- Last updated:  5.07.2013 BY Shawn Serbin <serbin@wisc.edu>
+#  	--- Last updated:  02.14.2014 BY Shawn Serbin <serbin@wisc.edu>
 ####################################################################################################
 
 
@@ -14,7 +14,7 @@ closeAllConnections()   # close any open connections to files
 
 #--------------------------------------------------------------------------------------------------#
 ### Load required library
-library(FieldSpec)
+library(FieldSpectra)
 #--------------------------------------------------------------------------------------------------#
 
 
@@ -53,6 +53,6 @@ plot(seq(350,2500,1),spectra[2,2:dim(spectra)[2]],type="l")
 ### Process a series of spectra directories
 
 ### Run all on a series of directories
-import.asd(settings.file=settings)
+# import.asd(settings.file=settings) # deprecated
 #--------------------------------------------------------------------------------------------------#
 
