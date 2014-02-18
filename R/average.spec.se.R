@@ -199,7 +199,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   
   ### Do initial checks on spectra
   # find white refs
-  wht.ref <- which(rowMeans(in.spec2)>0.97) # should change this to an option.  I.e. allow user to select WR criteria
+  wht.ref <- which(rowMeans(in.spec2)>0.98) # should change this to an option.  I.e. allow user to select WR criteria
   rm(in.spec,in.spec2)
   wht.ref.spec <- droplevels(in.spec3[wht.ref,])
   
@@ -216,16 +216,16 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   #good.spec <- droplevels(in.spec3[which(in.spec3$Wave_450<=bias),])
   if (length(good.spec.temp2)>0){
     good.spec <- droplevels(in.spec3[good.spec.temp2,])  
-    dims <- dim(good.spec)
-    check <- length(wht.ref)+dim(good.spec)[1]+dim(bad.spec)[1]==dim(in.spec3)[1]
+    #dims <- dim(good.spec)
+    #check <- length(wht.ref)+dim(good.spec)[1]+dim(bad.spec)[1]==dim(in.spec3)[1]
   } else {
-    #good.spec <- droplevels(in.spec3[good.spec.temp,])
-    good.spec <- wht.ref.spec
-    dims <- dim(good.spec)
-    check <- length(wht.ref)+dim(bad.spec)[1]==dim(in.spec3)[1]
+    good.spec <- droplevels(in.spec3[good.spec.temp,])
+    #good.spec <- wht.ref.spec
+    #dims <- dim(good.spec)
+    #check <- length(wht.ref)+dim(bad.spec)[1]==dim(in.spec3)[1]
   }              
-  #dims <- dim(good.spec)
-  #check <- length(wht.ref)+dim(good.spec)[1]+dim(bad.spec)[1]==dim(in.spec3)[1]
+  dims <- dim(good.spec)
+  check <- length(wht.ref)+dim(good.spec)[1]+dim(bad.spec)[1]==dim(in.spec3)[1]
   
   # temporary debugging flag
   if (check==FALSE) {
