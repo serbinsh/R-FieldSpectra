@@ -12,11 +12,13 @@ Description: A field spectroscopy package containing functions to process
     ecophysiological research.
 Depends:
     XML,
-    Hmisc
+    Hmisc,
+    signal,
+    Rcpp
 Suggests:
     testthat,
-    Rprospect,
-    signal
+    devtools,
+    Rprospect
 SystemRequirements: 
 OS_type: Windows, unix, mac
 License: FreeBSD + file LICENSE
