@@ -2,7 +2,7 @@ Package: FieldSpectra
 Type: Package
 Title: Functions for processing field spectroscopy data
 Version: 0.920
-Date: 2014-02-14
+Date: 2014-02-18
 Author: Shawn P. Serbin
 Maintainer: Shawn P. Serbin <serbin@wisc.edu>
 Description: A field spectroscopy package containing functions to process
