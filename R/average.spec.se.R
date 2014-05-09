@@ -62,11 +62,14 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   ### Select optional spectra type for plotting
   if (!is.null(spec.type)) {
     s.type <- c("Reflectance","Transmittance")
-    index <- agrep(pattern=temp,c("reflectance","transmittance"),ignore.case = TRUE)
+    #index <- agrep(pattern=spec.type,c("reflectance","transmittance"),ignore.case = TRUE,max.distance=0.3)
+    index <- pmatch(tolower(spec.type),c("reflectance","transmittance"))
     spec.type <- s.type[index]
   } else {
     spec.type <- "Reflectance"
   }
+  print(paste0("Spectra Type: ",spec.type))
+  print(" ")
   
   ### Check for input spec file extension
   if (is.null(settings.file$options$spec.file.ext) && is.null(spec.file.ext)){
@@ -315,7 +318,12 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
     # need to make sure indices are alligned
     # window <- 151:2051 # 500 - 2400
     # window <- 151:1851 # 500 - 2200
-    window <- 151:1751 # 500 - 2100
+    # window <- 151:1751 # 500 - 2100
+    if (spec.type=="Reflectance") {
+      window <- 151:1851 # 500 - 2200
+    } else if (spec.type=="Transmittance") {
+      window <- 151:1451 # 500 - 1800
+    }
     if (any(good.spec2[i,window]>spec.upper[ind.avg,window]) || 
           any(good.spec2[i,window] < spec.lower[ind.avg,window])) {
       bad.spec <- rbind(bad.spec,good.spec[i,])
@@ -449,7 +457,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   if (dims[1]>0){
     plot.data <- as.matrix(spec.avg[,2:dims[2]])
     png(file=paste(out.dir,dlm,"Averaged_Spectra",".png",sep=""),width=800,height=600,res=100)
-    matplot(seq(start.wave,end.wave,step.size), t(plot.data),cex=0.01,xlim=c(350,2500),
+    matplot(seq(start.wave,end.wave,step.size), t(plot.data),cex=0.01,xlim=c(350,2500),ylim=c(0,1),
             xlab="Wavelength (nm)",ylab=paste(spec.type,"(%)",sep=" "), main="Averaged Spectra",
             cex.axis=1.3,cex.lab=1.3, type="l",lwd=1.5)
     abline(h=bias,lty=2,col="dark grey")
