@@ -61,9 +61,11 @@ settings <- function(input.file=NULL){
 ##' 
 ##' @param file.dir File directory or filename of single spectra for processing
 ##' @param out.dir Output directory for metadata information file
-##' @param instrument What instrument was used to collect spectra.  Current options: ASD, SE
-##' @param spec.file.ext [Optional] Input spectra file extension. E.g. .asd (ASD) or .sed (Spectral Evolution).
-##' Default for ASD instruments is .asd.  Default for Spectral Evolution instruments is .sed
+##' @param instrument What instrument was used to collect spectra.  Current options: ASD, SE, SVC
+##' @param spec.file.ext [Optional] Input spectra file extension. E.g. .asd (ASD), .sed (Spectral Evolution),
+##' or .sig (Spectra Vista).
+##' Default for ASD instruments is .asd.  Default for Spectral Evolution instruments is .sed.  
+##' Default for Spectra Vista is .sig
 ##' @param output.file.ext [Optional] Output file extension of metadata information file. Default .csv
 ##' @param tz [Optional] Set the timezone of the spectra file collection.  Used to covert spectra collection 
 ##' time to UTC.  If unused it is assumed that the correct timezone is the current system timezone.
@@ -81,6 +83,13 @@ settings <- function(input.file=NULL){
 ##' # Spectral Evolution
 ##' file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpectra")
 ##' output <- extract.metadata(file,instrument="SE")
+##' 
+##' # Spectra Vista
+##' file <- system.file("extdata/gr070214_003.sig",package="FieldSpectra")
+##' output <- extract.metadata(file,instrument="SVC")
+##' 
+##' file <- system.file("extdata/BEO_CakeEater_Pheno_026_resamp.sig",package="FieldSpectra")
+##' output <- extract.metadata(file,instrument="SVC")
 ##' 
 ##' @author Shawn P. Serbin
 ##' 
@@ -106,28 +115,32 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
     out.dir <- settings.file$output.dir
   }
   
-  # Instrument
+  # Instrument - ***This section needs to be refined***
   if (is.null(settings.file) && is.null(instrument) && is.null(spec.file.ext)){ 
     stop("No instrument defined in settings file or function call.")
   } else if (!is.null(instrument)){
     instrument <- instrument
   } else if (!is.null(settings.file$instrument$name)){
-    inst <- c("ASD","ASD","ASD","SE","SE","SE","SE","SE","SE")
+    inst <- c("ASD","ASD","ASD","SE","SE","SE","SE","SE","SE","SVC","SVC","SVC","SVC","SVC","SVC","SVC")
     temp <- tolower(settings.file$instrument$name)
     #index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
     index <- agrep(pattern=temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","spectral evolution psm-3500",
-                                        "evolution","psm-3500","psm 3500"),max=5,ignore.case = TRUE)
+                                        "evolution","psm-3500","psm 3500","svc","spectra vista","spec vista","hr 1024i",
+                                  "hr 1024","1024i","1024"),max=5,ignore.case = TRUE)
     instrument <- inst[max(index)]
   } else if (spec.file.ext==".asd") {
     instrument <- "ASD"
   } else if (spec.file.ext==".sed") {
     instrument <- "SE"
+  }else if (spec.file.ext==".sig") {
+    instrument <- "SVC"
   }
   
   # Input file extension
   if (is.null(settings.file$options$spec.file.ext) && is.null(spec.file.ext)){ 
     if(instrument=="ASD") (spec.file.ext=".asd")
     if(instrument=="SE") (spec.file.ext=".sed")
+    if(instrument=="SVC") (spec.file.ext=".sig")
     warning("No input file extension defined in settings file or function call")
     warning(paste0("Using default: ", spec.file.ext))
   } else if (!is.null(spec.file.ext)){
@@ -693,6 +706,289 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
 }
 #==================================================================================================#
 
+
+#--------------------------------------------------------------------------------------------------#
+##'
+##' @name extract.metadata.svc
+##' @title Extract metadata from Spectra Vista files.  Called from extract.metadata
+##' 
+##' @return output Returns output dataframe of SVC metadata information
+##' 
+##' @author Shawn P. Serbin
+##' 
+extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,tz){
+  ### Set platform specific file path delimiter.  Probably will always be "/"
+  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
+  
+  # Check for custom output file extension
+  if (is.null(spec.file.ext)) {
+    spec.file.ext <- ".sig"
+  } else {
+    spec.file.ext <- spec.file.ext
+  }
+  
+  # Create output dataframe header
+  out.head <- c("Spectra_File_Name","Instrument","Integration","Scan_Method","Scan_Coadds","Scan_Time","Scan_Settings",
+                "External_Dataset_1","External_Dataset_2","External_Data_Dark","External_Data_Mask",
+                "Fore_Optic","Detector_Temperature","Battery","Error_Code","Raw_Units","Date","Local_Time","GPS_Active",
+                "Reference_Latitude_DD","Reference_Longitude_DD","Target_Latitude_DD","Target_Longitude_DD",
+                "Reference_GPS_Time_UTC","Target_GPS_Time_UTC","Reference_Memory_Slot",
+                "Target_Memory_Slot","Overlap_Handling","Overlap_Transition_Wavelengths","Matching_Type",
+                "Overlap_Matching_Wavelengths","NIR_SWIR_Algorithm","Factors","Comments")
+  
+  # Determine if running on single file or directory
+  check <- file.info(file.dir)
+  if (check$isdir) {
+    svc.files.names <- list.files(path=file.dir,pattern=spec.file.ext,full.names=FALSE)
+    svc.files.names <- unlist(strsplit(svc.files.names,".sig"))
+    svc.files <- list.files(path=file.dir,pattern=spec.file.ext,full.names=TRUE)
+    out.file.name <- "Spectra"
+    
+  } else {
+    svc.files <- file.dir
+    out.file.name <- unlist(strsplit(file.dir,dlm))
+    out.file.name <- out.file.name[length(out.file.name)]                
+    out.file.name <- unlist(strsplit(out.file.name,".sig"))
+    svc.files.names <- unlist(strsplit(out.file.name,".sig"))
+  }
+  
+  # Build empty metadata dataframe
+  data.line <- rep(NA,length(svc.files));
+  file.name <- rep(NA,length(svc.files));inst <- rep(NA,length(svc.files));integration <- rep(NA,length(svc.files));
+  scan.method <- rep(NA,length(svc.files));scan.coadds <- rep(NA,length(svc.files));scan.time <- rep(NA,length(svc.files));
+  scan.settings <- rep(NA,length(svc.files));ext.data.1 <- rep(NA,length(svc.files));ext.data.2 <- rep(NA,length(svc.files));
+  ext.data.dark <- rep(NA,length(svc.files));ext.data.mask <- rep(NA,length(svc.files));fore.optic <- rep(NA,length(svc.files));
+  detector.temp <- rep(NA,length(svc.files));battery <- rep(NA,length(svc.files));error.code <- rep(NA,length(svc.files));
+  raw.units <- rep(NA,length(svc.files));date.time <- rep(NA,length(svc.files));date <- rep(NA,length(svc.files));
+  local.time <- rep(NA,length(svc.files));GPS.active <- rep(NA,length(svc.files));
+  ref.lattitude <- rep(NA,length(svc.files));target.lattitude <- rep(NA,length(svc.files));
+  ref.longitude <- rep(NA,length(svc.files));target.longitude <- rep(NA,length(svc.files));
+  ref.gps.time <- rep(NA,length(svc.files));target.gps.time <- rep(NA,length(svc.files)); 
+  ref.memory.slot <- rep(NA,length(svc.files));target.memory.slot <- rep(NA,length(svc.files));
+  overlap.handling <- rep(NA,length(svc.files));overlap.transition.wavelengths <- rep(NA,length(svc.files));
+  matching.type <- rep(NA,length(svc.files));overlap.matching.wavelengths <- rep(NA,length(svc.files));
+  nir.swir.alg <- rep(NA,length(svc.files));factors <- rep(NA,length(svc.files));
+  comments <- rep(NA,length(svc.files));
+  #gps.time <- rep(NA,length(svc.files));
+ 
+  # Run metadata extraction
+  for (i in 1:length(svc.files)){
+    data.line.temp <- system(paste("grep -n","data=", svc.files[i]),intern=TRUE)
+    data.line.temp <- strsplit(data.line.temp,":")[[length(data.line.temp)]]
+    data.line[i] <- as.numeric(data.line.temp[1])
+    file.head <- readLines(svc.files[i],n=data.line[i]-1)
+
+    file.name[i] <- gsub(" ","",(strsplit(file.head[2],"=")[[1]])[2])
+    inst[i] <- gsub(" ","",(strsplit(file.head[3],"=")[[1]])[2])
+    integration[i] <- gsub(" ","",(strsplit(file.head[4],"=")[[1]])[2])
+    scan.method[i] <- gsub(" ","",(strsplit(file.head[5],"=")[[1]])[2]) #<- later split into ref and target
+    scan.coadds[i] <- gsub(" ","",(strsplit(file.head[6],"=")[[1]])[2]) #<- later split into ref and target
+    scan.time[i] <- gsub(" ","",(strsplit(file.head[7],"=")[[1]])[2]) #<- later split into ref and target
+    scan.settings[i] <- gsub(" ","",(strsplit(file.head[8],"=")[[1]])[2]) #<- later split into ref and target
+    ext.data.1[i] <- gsub(" ","",(strsplit(file.head[9],"=")[[1]])[2]) #<- later split into ref and target
+    ext.data.2[i] <- gsub(" ","",(strsplit(file.head[10],"=")[[1]])[2]) #<- later split into ref and target
+    ext.data.dark[i] <- gsub(" ","",(strsplit(file.head[11],"=")[[1]])[2]) #<- later split into ref and target
+    ext.data.mask[i] <- gsub(" ","",(strsplit(file.head[12],"=")[[1]])[2]) #<- later split into ref and target
+    fore.optic[i] <- gsub(" ","",(strsplit(file.head[13],"=")[[1]])[2]) #<- later split into ref and target
+    detector.temp[i] <- gsub(" ","",(strsplit(file.head[14],"=")[[1]])[2]) #<- later split into ref and target
+    battery[i] <- gsub(" ","",(strsplit(file.head[15],"=")[[1]])[2]) 
+    error.code[i] <- gsub(" ","",(strsplit(file.head[16],"=")[[1]])[2]) 
+    raw.units[i] <- gsub(" ","",(strsplit(file.head[17],"=")[[1]])[2]) #<- later split into ref and target
+    date.time[i] <- (strsplit(file.head[18],"=")[[1]])[2]
+    
+    # Split into Date and Time.  Needs refining
+    date[i] <- gsub(" ","",(substr(date.time[i],1,10)))
+    local.time[i] <- paste0(gsub(" ","",(substr(date.time[i],11,21))),",",
+                            gsub(" ","",(substr(date.time[i],34,43))))
+    #
+    
+    # GPS on?  Clean this up
+    if (gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2])==","){
+      GPS.active[i] <- "no"
+      ref.lattitude[i] <- "not_recorded"
+      ref.longitude[i] <- "not_recorded"
+      target.lattitude[i] <- "not_recorded"
+      target.longitude[i] <- "not_recorded"
+      ref.gps.time[i] <- "not_recorded"
+      target.gps.time[i] <- "not_recorded"
+    } else {
+      GPS.active[i] <- "yes"
+      ref.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[1]
+      target.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[2]
+      if (grepl(pattern="N",ref.lattitude[i],ignore.case=TRUE)){
+        lat.direction <- "N"
+        lat.sign <- 1
+      } else {
+        lat.direction <- "S"
+        lat.sign <- -1
+      }
+      ref.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2]),",")[[1]])[1]
+      target.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2]),",")[[1]])[2]
+      if (grepl(pattern="E",ref.longitude[i],ignore.case=TRUE)){
+        lat.direction <- "E"
+        long.sign <- 1
+      } else {
+        lat.direction <- "W"
+        long.sign <- -1
+      }
+      # Convert to decimal degreees
+      ref.lattitude[i] <- lat.sign*((as.numeric(substr(ref.lattitude[i],1,which(strsplit(ref.lattitude[i], '')[[1]]=='.')-3)) + 
+                                       (as.numeric(substr(ref.lattitude[i],which(strsplit(ref.lattitude[i], '')[[1]]=='.')-2,
+                                                          nchar(ref.lattitude[i])-1))/60)) )
+      target.lattitude[i] <- lat.sign*((as.numeric(substr(target.lattitude[i],1,which(strsplit(target.lattitude[i], '')[[1]]=='.')-3)) + 
+                                          (as.numeric(substr(target.lattitude[i],which(strsplit(target.lattitude[i], '')[[1]]=='.')-2,
+                                                             nchar(target.lattitude[i])-1))/60)) )
+      ref.longitude[i] <- long.sign*((as.numeric(substr(ref.longitude[i],1,which(strsplit(ref.longitude[i], '')[[1]]=='.')-3)) + 
+                                       (as.numeric(substr(ref.longitude[i],which(strsplit(ref.longitude[i], '')[[1]]=='.')-2,
+                                                          nchar(ref.longitude[i])-1))/60)) )
+      target.longitude[i] <- long.sign*((as.numeric(substr(target.longitude[i],1,which(strsplit(target.longitude[i], '')[[1]]=='.')-3)) + 
+                                          (as.numeric(substr(target.longitude[i],which(strsplit(target.longitude[i], '')[[1]]=='.')-2,
+                                                             nchar(target.longitude[i])-1))/60)) )
+      
+      # GPS time
+      ref.gps.time[i] <- (strsplit(gsub(" ","",(strsplit(file.head[21],"=")[[1]])[2]),",")[[1]])[1]
+      ref.gps.time[i] <- paste0(paste(substr(ref.gps.time[i],1,2),substr(ref.gps.time[i],3,4),
+                                      substr(ref.gps.time[i],5,6),sep=":"),"Z")
+      target.gps.time[i] <- (strsplit(gsub(" ","",(strsplit(file.head[21],"=")[[1]])[2]),",")[[1]])[2]
+      target.gps.time[i] <- paste0(paste(substr(target.gps.time[i],1,2),substr(target.gps.time[i],3,4),
+                                         substr(target.gps.time[i],5,6),sep=":"),"Z")               
+    } # End of GPS info
+    
+    ref.memory.slot[i] <- as.numeric((strsplit(gsub(" ","",(strsplit(file.head[23],"=")[[1]])[2]),",")[[1]])[1])
+    target.memory.slot[i] <- as.numeric((strsplit(gsub(" ","",(strsplit(file.head[23],"=")[[1]])[2]),",")[[1]])[2])
+    
+    # Overlap handling.  Removed or preserved?
+    if (grepl(pattern="Overlap: ?.emove",file.head[24])){
+      overlap.handling[i] <- "Removed"
+      overlap.transition.wavelengths[i] <- gsub(" ","",substr(file.head[24],
+      gregexpr(pattern="@",file.head[24])[[1]][1]+1,gregexpr(pattern="Matching",file.head[24])[[1]][1]-3))
+    } else if (grepl(pattern="Overlap: ?.reserve",file.head[24])){
+      overlap.handling[i] <- "Preserved"
+      overlap.transition.wavelengths[i] <- paste("NA","NA",sep=",")
+    } else {
+      overlap.handling[i] <- "Unknown"
+      overlap.transition.wavelengths[i] <- paste("Unknown","Unknown",sep=",")
+    }
+    
+    # Matching type: none/Radiance/Reflectance
+    matching.type[i] <- gsub(" ","",substr(file.head[24],
+           regexec(pattern="Matching Type: ?(\\w+)",file.head[24])[[1]][2],
+           gregexpr(pattern="@",file.head[24])[[1]][2]-1))
+    if (matching.type[i]=="Radiance" || matching.type[i]=="Reflectance"){
+      overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[24],
+                                                         gregexpr(pattern="@",file.head[24])[[1]][2]+1,
+                                                         gregexpr(pattern="/",file.head[24])[[1]][1]-1))
+    } else {
+      overlap.matching.wavelengths[i] <- paste("NA","NA",sep=",")
+    }
+    if (grepl(pattern='NIR-SWIR [Oo]ff',file.head[24])){
+      nir.swir.alg[i] <- "No"
+    } else if (grepl(pattern='NIR-SWIR [Oo]n',file.head[24])){
+      nir.swir.alg[i] <- "Yes"
+    } else {
+      nir.swir.alg[i] <- "Unknown"
+    }
+      
+    # Get factors - needs refinement
+    factors[i] <- gsub(" ","",substr(file.head[24],regexec(pattern="= ",file.head[24])[[1]][1]+1,
+                       gregexpr(pattern="Overlap:",file.head[24])[[1]][1]-2))
+    
+    # Get comments - needs refinement
+    comments[i] <- substr(file.head[22],gregexpr(pattern="=",file.head[22])[[1]][1]+2,
+                                      nchar(file.head[22])-1)
+  }
+  
+  # Create output
+  out.metadata <- data.frame(svc.files.names,inst,integration,scan.method,scan.coadds,scan.time,scan.settings,
+                               ext.data.1,ext.data.2,ext.data.dark,ext.data.mask,fore.optic,detector.temp,
+                               battery,error.code,raw.units,date,local.time,GPS.active,ref.lattitude,ref.longitude,
+                               target.lattitude,target.longitude,ref.gps.time,target.gps.time,ref.memory.slot,
+                               target.memory.slot,overlap.handling,overlap.transition.wavelengths,
+                               matching.type,overlap.matching.wavelengths,nir.swir.alg,factors,comments)
+  names(out.metadata) <- out.head                      
+
+    
+  if(!is.null(out.dir)){
+      if (!file.exists(out.dir)) dir.create(out.dir, recursive=TRUE)
+      write.csv(out.metadata,paste(out.dir,"/",out.file.name,".metadata",output.file.ext,sep=""),
+                row.names=FALSE)
+  }
+    
+  # return dataframe, if requested in function call
+  invisible(out.metadata)
+    
+    
+}
+#==================================================================================================#
+
+
+#--------------------------------------------------------------------------------------------------#
+##'
+##' @name plot.spectra
+##' 
+##'
+##' @author Shawn P. Serbin
+##' 
+plot.spectra <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,out.filename=NULL,
+                         out.file.ext=".csv"){
+  
+  ### Set platform specific file path delimiter.  Probably will always be "/"
+  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
+  
+  # Input directory
+  if (is.null(settings.file) && is.null(file.dir)){
+    stop("No input file or directory given in settings file or function call.")
+  } else if (!is.null(file.dir)){
+    file.dir <- file.dir
+  } else if (!is.null(settings.file$spec.dir)){
+    file.dir <- settings.file$spec.dir
+  }
+  
+  # Output directory
+  if (!is.null(out.dir)){
+    out.dir <- out.dir
+  } else if (!is.null(settings.file$output.dir)){
+    out.dir <- settings.file$output.dir
+  }
+  
+  # Instrument - ***This section needs to be refined***
+  if (is.null(settings.file) && is.null(instrument) && is.null(spec.file.ext)){ 
+    stop("No instrument defined in settings file or function call.")
+  } else if (!is.null(instrument)){
+    instrument <- instrument
+  } else if (!is.null(settings.file$instrument$name)){
+    inst <- c("ASD","ASD","ASD","SE","SE","SE","SE","SE","SE","SVC","SVC","SVC","SVC","SVC","SVC","SVC")
+    temp <- tolower(settings.file$instrument$name)
+    #index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
+    index <- agrep(pattern=temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","spectral evolution psm-3500",
+                                  "evolution","psm-3500","psm 3500","svc","spectra vista","spec vista","hr 1024i",
+                                  "hr 1024","1024i","1024"),max=5,ignore.case = TRUE)
+    instrument <- inst[max(index)]
+  } else if (spec.file.ext==".asd") {
+    instrument <- "ASD"
+  } else if (spec.file.ext==".sed") {
+    instrument <- "SE"
+  }else if (spec.file.ext==".sig") {
+    instrument <- "SVC"
+  }
+  
+  # Input file extension
+  if (is.null(settings.file$options$spec.file.ext) && is.null(spec.file.ext)){ 
+    if(instrument=="ASD") (spec.file.ext=".asd")
+    if(instrument=="SE") (spec.file.ext=".sed")
+    if(instrument=="SVC") (spec.file.ext=".sig")
+    warning("No input file extension defined in settings file or function call")
+    warning(paste0("Using default: ", spec.file.ext))
+  } else if (!is.null(spec.file.ext)){
+    spec.file.ext <- spec.file.ext
+  } else if (!is.null(settings.file$options$spec.file.ext)){
+    spec.file.ext <- settings.file$options$spec.file.ext
+  }
+
+  
+  
+} ### End of function
+#==================================================================================================#
 
 #--------------------------------------------------------------------------------------------------#
 ##'
