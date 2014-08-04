@@ -59,11 +59,11 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   }
   if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
   
-  ### Select optional spectra type for plotting
+  ### Select optional spectra type for processing and plotting
   if (!is.null(spec.type)) {
-    s.type <- c("Reflectance","Transmittance")
+    s.type <- c("Reflectance","Transmittance","Canopy")
     #index <- agrep(pattern=spec.type,c("reflectance","transmittance"),ignore.case = TRUE,max.distance=0.3)
-    index <- pmatch(tolower(spec.type),c("reflectance","transmittance"))
+    index <- pmatch(tolower(spec.type),c("reflectance","transmittance","canopy"))
     spec.type <- s.type[index]
   } else {
     spec.type <- "Reflectance"
@@ -323,6 +323,9 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
       window <- 151:1851 # 500 - 2200
     } else if (spec.type=="Transmittance") {
       window <- 151:1451 # 500 - 1800
+    } else if (spec.type=="Canopy") {
+      #window <- c(151:1441) # 500 - 1790
+      window <- c(151:1441,1671:1901)
     }
     if (any(good.spec2[i,window]>spec.upper[ind.avg,window]) || 
           any(good.spec2[i,window] < spec.lower[ind.avg,window])) {

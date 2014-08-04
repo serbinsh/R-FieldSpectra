@@ -7,6 +7,9 @@
 ##' 
 ##' @param file.dir Directory of spectra files to process
 ##' @param out.dir Output directory for processed spectra files
+##' @param spec.type Option to set what type of spectra to average. 
+##' Options: Reflectance, Transmittance.  Can be set with abbreviations: e.g. "Refl" or "Tran"
+##' Default is "Reflectance"
 ##' @param start.wave Starting wavelength of spectra files. 
 ##' Not needed if specified in XML settings file.
 ##' @param end.wave Ending wavelength of spectra files. Not needed if 
@@ -40,7 +43,7 @@
 ##'
 ##' @author Shawn P. Serbin
 ##'
-average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NULL,
+average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",start.wave=NULL,end.wave=NULL,
                          step.size=NULL,bias.threshold=NULL,suffix.length=NULL,
                          output.file.ext=NULL,metadata.file=NULL,image=FALSE,
                          settings.file=NULL){
@@ -80,6 +83,18 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
   ### Remove any previous output in out.dir
   unlink(list.files(out.dir,full.names=TRUE),recursive=FALSE,force=TRUE)
   unlink(list.files(badspec.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
+  
+  ### Select optional spectra type for processing and plotting
+  if (!is.null(spec.type)) {
+    s.type <- c("Reflectance","Transmittance","Canopy")
+    #index <- agrep(pattern=spec.type,c("reflectance","transmittance"),ignore.case = TRUE,max.distance=0.3)
+    index <- pmatch(tolower(spec.type),c("reflectance","transmittance","canopy"))
+    spec.type <- s.type[index]
+  } else {
+    spec.type <- "Reflectance"
+  }
+  print(paste0("Spectra Type: ",spec.type))
+  print(" ")
   
   ### Define wavelengths.  If set in settings or function call.  Otherwise read from file header
   if (!is.null(start.wave)){
@@ -290,7 +305,15 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,start.wave=NULL,end.wave=NUL
     # need to make sure indices are alligned
     # window <- 151:2051 # 500 - 2400
     # window <- 151:1851 # 500 - 2200
-    window <- 151:1751 # 500 - 2100
+    # window <- 151:1751 # 500 - 2100
+    if (spec.type=="Reflectance") {
+      window <- 151:1851 # 500 - 2200
+    } else if (spec.type=="Transmittance") {
+      window <- 151:1451 # 500 - 1800
+    } else if (spec.type=="Canopy") {
+      #window <- c(151:1441) # 500 - 1790
+      window <- c(151:1441,1671:1901)
+    } 
     if (any(good.spec2[i,window]>spec.upper[ind.avg,window]) || 
       any(good.spec2[i,window] < spec.lower[ind.avg,window])) {
       bad.spec <- rbind(bad.spec,good.spec[i,])
