@@ -676,7 +676,7 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     data.columns[i] <- gsub("[^0-9]","", strsplit(file.head[25],":")[[1]])[1]
     
     # Original version
-    temp.1 <- read.table(se.files[i],skip=data.line[i],nrows=1,sep="\t")
+    #temp.1 <- read.table(se.files[i],skip=data.line[i],nrows=1,sep="\t")
     # Modified version
     temp.1 <- read.table(se.files[i],skip=data.line[i],comment.char="",nrows=1,sep="\t")
     temp.2 <- apply(temp.1, 1, function(x) pmatch("Reflect",x)) 
