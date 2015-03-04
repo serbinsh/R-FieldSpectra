@@ -309,7 +309,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
     if (spec.type=="Reflectance") {
       window <- 151:1851 # 500 - 2200
     } else if (spec.type=="Transmittance") {
-      window <- 151:1451 # 500 - 1800
+      window <- 151:1351 # 500 - 1700
     } else if (spec.type=="Canopy") {
       #window <- c(151:1441) # 500 - 1790
       window <- c(151:1441,1671:1901)
