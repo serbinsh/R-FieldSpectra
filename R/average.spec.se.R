@@ -18,6 +18,8 @@
 ##' Not needed if specified in XML settings file.
 ##' @param bias.threshold reflectance/transmittance cutoff to remove spectra with anartificial 
 ##' bias (shift) due to improper spectral collection
+##' @param outlier.cutoff [Optional] Set upper/lower standard deviation cutoff to identify statistical Refl/Trans outliers within
+##' individual sample sets.  Set as outlier.cutoff*Sample Sdev, e.g. 2.0*Sdev.  Default 2.0
 ##' @param suffix.length length of auto numbering attached to ASD file names.  This number of 
 ##' characters will be removed from the filename when averaged.
 ##' @param output.file.ext optional setting to set file extension of output files. Defaults to .csv
@@ -31,7 +33,7 @@
 ##' @author Shawn P. Serbin
 ##'
 average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.ext=NULL,start.wave=NULL,
-                         end.wave=NULL,step.size=NULL,bias.threshold=NULL,suffix.length=NULL,
+                         end.wave=NULL,step.size=NULL,bias.threshold=NULL,outlier.cutoff=2.0,suffix.length=NULL,
                          output.file.ext=NULL,settings.file=NULL) {
   
   ### Set platform specific file path delimiter.  Probably will always be "/"
@@ -194,6 +196,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
               dim(in.spec3)[1],sep=""))
   print(paste("----- Total number of spectral samples: ",
               length(unique.spec <- unique(in.spec3$Spectra)),sep=""))
+  print(paste0("----- Outlier Threshold: ",outlier.cutoff))
   print("")
   
   ## Update progress bar
@@ -287,10 +290,10 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   ### Setup spectral checks
   dims <- dim(spec.avg)
   n <- rle(as.numeric(good.spec$Spectra))$lengths
-  spec.upper <- spec.avg[,2:dims[2]] + (spec.sdev[,2:dims[2]]*2) # 2*SD outlier check
+  spec.upper <- spec.avg[,2:dims[2]] + (spec.sdev[,2:dims[2]]*outlier.cutoff) # 2*SD outlier check
   #spec.upper <- spec.avg[,2:dims[2]] + ((spec.sdev[,2:dims[2]]/sqrt(n))*2.96)
   spec.upper <- data.frame(Spectra=spec.avg.names,spec.upper)
-  spec.lower <- spec.avg[,2:dims[2]] - (spec.sdev[,2:dims[2]]*2)
+  spec.lower <- spec.avg[,2:dims[2]] - (spec.sdev[,2:dims[2]]*outlier.cutoff)
   #spec.lower <- spec.avg[,2:dims[2]] - ((spec.sdev[,2:dims[2]]/sqrt(n))*2.96)
   spec.lower <- data.frame(Spectra=spec.avg.names,spec.lower)
   
@@ -322,7 +325,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
     if (spec.type=="Reflectance") {
       window <- 151:1851 # 500 - 2200
     } else if (spec.type=="Transmittance") {
-      window <- 151:1451 # 500 - 1800
+      window <- 151:1351 # 500 - 1700
     } else if (spec.type=="Canopy") {
       #window <- c(151:1441) # 500 - 1790
       window <- c(151:1441,1671:1901)

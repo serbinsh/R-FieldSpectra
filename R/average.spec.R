@@ -18,6 +18,8 @@
 ##' Not needed if specified in XML settings file.
 ##' @param bias.threshold Reflectance/transmittance cutoff to remove spectra with anartificial 
 ##' bias (shift) due to improper spectral collection
+##' @param outlier.cutoff [Optional] Set upper/lower standard deviation cutoff to identify statistical Refl/Trans outliers within
+##' individual sample sets.  Set as outlier.cutoff*Sample Sdev, e.g. 2.0*Sdev.  Default 2.0
 ##' @param suffix.length Length of auto numbering attached to ASD file names.  This number of 
 ##' characters will be removed from the filename when averaged.
 ##' @param output.file.ext Optional setting to set file extension of output files. Defaults to .csv
@@ -44,7 +46,7 @@
 ##' @author Shawn P. Serbin
 ##'
 average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",start.wave=NULL,end.wave=NULL,
-                         step.size=NULL,bias.threshold=NULL,suffix.length=NULL,
+                         step.size=NULL,bias.threshold=NULL,outlier.cutoff=2.0,suffix.length=NULL,
                          output.file.ext=NULL,metadata.file=NULL,image=FALSE,
                          settings.file=NULL){
   ## TODO:
@@ -55,7 +57,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
   #--------------------- Setup function -----------------------#
-  
+
   ### Check for proper input directory
   if (is.null(settings.file) && is.null(file.dir)){
     stop("ERROR: No input file directory given in settings file or function call.")
@@ -95,7 +97,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   }
   print(paste0("Spectra Type: ",spec.type))
   print(" ")
-  
+
   ### Define wavelengths.  If set in settings or function call.  Otherwise read from file header
   if (!is.null(start.wave)){
     start.wave <- start.wave
@@ -142,7 +144,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   } 
   
   ### Remove diagnostic info from file list to be processed
-  jc.files  = list.files(path=file.dir,pattern=output.file.ext,
+  jc.files <- list.files(path=file.dir,pattern=output.file.ext,
                             full.names=FALSE)
   jc.files <- jc.files[-grep(pattern="Diagnostic",jc.files)]
   num.files  = length(jc.files)
@@ -153,9 +155,9 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   }
   
   ### Create file info list for output
-  info = data.frame(Spectra=rep(NA,num.files),Threshold_Check = rep(NA,num.files),
+  info <- data.frame(Spectra=rep(NA,num.files),Threshold_Check = rep(NA,num.files),
                     Threshold_Value=rep(NA,num.files),Failed_Sdev_Check= rep(NA,num.files))
-  names(info)=c("Spectra","Threshold Check","Bias Threshold Value",
+  names(info) <- c("Spectra","Threshold Check","Bias Threshold Value",
                 "Failed Outlier Test (Yes/No)?")
   
   #-------------------------- Start average loop --------------------------# 
@@ -217,6 +219,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
               dim(in.spec3)[1],sep=""))
   print(paste("----- Total number of spectra samples: ",
               length(unique.spec <- unique(in.spec3$Spectra)),sep=""))
+  print(paste0("----- Outlier Threshold: ",outlier.cutoff))
   print("")
   
   setTxtProgressBar(pb, 20)                      # show progress bar
@@ -271,23 +274,27 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   dims <- dim(spec.avg)
   rm(mat.data,ind)
   
+  # Debug
+  #plot(seq(350,2500,1),unlist(spec.sdev[9,2:dim(spec.sdev)[2]]),ylim=c(0,0.04),type="l")
+  
+  
   ### Setup spectral checks
   dims <- dim(spec.avg)
   n <- rle(as.numeric(good.spec$Spectra))$lengths
-  spec.upper <- spec.avg[,2:dims[2]] + (spec.sdev[,2:dims[2]]*2) # 2*SD outlier check
+  spec.upper <- spec.avg[,2:dims[2]] + (spec.sdev[,2:dims[2]]*outlier.cutoff) # 2*SD outlier check
   #spec.upper <- spec.avg[,2:dims[2]] + ((spec.sdev[,2:dims[2]]/sqrt(n))*2.96)
   spec.upper <- data.frame(Spectra=spec.avg.names,spec.upper)
-  spec.lower <- spec.avg[,2:dims[2]] - (spec.sdev[,2:dims[2]]*2)
+  spec.lower <- spec.avg[,2:dims[2]] - (spec.sdev[,2:dims[2]]*outlier.cutoff)
   #spec.lower <- spec.avg[,2:dims[2]] - ((spec.sdev[,2:dims[2]]/sqrt(n))*2.96)
   spec.lower <- data.frame(Spectra=spec.avg.names,spec.lower)
   
   ### For debugging
   #dims <- dim(spec.avg)
-  #plot(unlist(spec.avg[1,2:dims[2]]),type="l",lwd=2)
-  #lines(unlist(spec.upper[1,2:dims[2]]),lty=2)
-  #lines(unlist(spec.lower[1,2:dims[2]]),lty=2)
+  #plot(seq(350,2500,1),unlist(spec.avg[17,2:dims[2]]),type="l",lwd=2,ylim=c(0,0.6))
+  #lines(seq(350,2500,1),unlist(spec.upper[17,2:dims[2]]),lty=2)
+  #lines(seq(350,2500,1),unlist(spec.lower[17,2:dims[2]]),lty=2)
   #dims <- dim(good.spec)
-  #lines(unlist(good.spec[7,3:dims[2]]),lty=1)
+  #lines(seq(350,2500,1),unlist(good.spec[142,3:dims[2]]),lty=1)
   ###
   
   setTxtProgressBar(pb, 50)                      # show progress bar
@@ -382,13 +389,8 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
     } 
     rm(spec.name,out.spec,out.filename,dims)
   } # End of output of bad spectra
-  
-  ### Output averages of good spectra
-  # **** IS THIS NEEDED?? NO, should be removed
-#  if (length(grep("averaged_files",out.dir))==0){
-#    out.dir <- paste(out.dir,dlm,"averaged_files",sep="")
-#  }
-  
+
+  # Output good spec
   dims <- dim(spec.avg)
   if (dims[1]>0){
     for (i in 1:dims[1]){
@@ -430,7 +432,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
     if (dims[1]>0){
       plot.data <- as.matrix(spec.avg[,2:dims[2]])
       png(file=paste(out.dir,dlm,"Averaged_Spectra",".png",sep=""),width=800,height=600,res=100)
-      matplot(seq(start.wave,end.wave,step.size), t(plot.data),cex=0.01,xlim=c(350,2500),
+      matplot(seq(start.wave,end.wave,step.size), t(plot.data),cex=0.01,xlim=c(350,2500),ylim=c(0,1),
               xlab="Wavelength (nm)",ylab="Reflectance (%)", main="Averaged Spectra",
               cex.axis=1.3,cex.lab=1.3, type="l",lwd=1.5)
       abline(h=bias,lty=2,col="dark grey")
