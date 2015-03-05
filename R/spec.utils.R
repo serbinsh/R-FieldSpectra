@@ -902,6 +902,7 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
   }
   
   # Create output
+  overlap.transition.wavelengths <- sub(",","/",overlap.transition.wavelengths)
   out.metadata <- data.frame(svc.files.names,inst,integration,scan.method,scan.coadds,scan.time,scan.settings,
                                ext.data.1,ext.data.2,ext.data.dark,ext.data.mask,fore.optic,detector.temp,
                                battery,error.code,raw.units,date,local.time,GPS.active,ref.lattitude,ref.longitude,
@@ -933,7 +934,7 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
 ##' @author Shawn P. Serbin
 ##' 
 plot.spectra <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,out.filename=NULL,
-                         out.file.ext=".csv"){
+                         out.file.ext=".csv",settings.file=NULL){
   
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?

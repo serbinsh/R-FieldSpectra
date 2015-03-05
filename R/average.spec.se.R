@@ -39,8 +39,6 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
   
-  # TODO:  USE invisible to return a dataframe of spectra
-  
   ### Check for proper input directory
   if (is.null(settings.file) && is.null(file.dir)){
     stop("No input file directory given in settings file or function call.")
