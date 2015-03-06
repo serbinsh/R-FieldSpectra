@@ -933,69 +933,69 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
 #--------------------------------------------------------------------------------------------------#
 ##'
 ##' @name plot.spectra
-##' 
+##' @title NOT YET IMPLEMENTED
 ##'
 ##' @author Shawn P. Serbin
 ##' 
-plot.spectra <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,out.filename=NULL,
-                         out.file.ext=".csv",settings.file=NULL){
-  
-  ### Set platform specific file path delimiter.  Probably will always be "/"
-  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
-  
-  # Input directory
-  if (is.null(settings.file) && is.null(file.dir)){
-    stop("No input file or directory given in settings file or function call.")
-  } else if (!is.null(file.dir)){
-    file.dir <- file.dir
-  } else if (!is.null(settings.file$spec.dir)){
-    file.dir <- settings.file$spec.dir
-  }
-  
-  # Output directory
-  if (!is.null(out.dir)){
-    out.dir <- out.dir
-  } else if (!is.null(settings.file$output.dir)){
-    out.dir <- settings.file$output.dir
-  }
-  
-  # Instrument - ***This section needs to be refined***
-  if (is.null(settings.file) && is.null(instrument) && is.null(spec.file.ext)){ 
-    stop("No instrument defined in settings file or function call.")
-  } else if (!is.null(instrument)){
-    instrument <- instrument
-  } else if (!is.null(settings.file$instrument$name)){
-    inst <- c("ASD","ASD","ASD","SE","SE","SE","SE","SE","SE","SVC","SVC","SVC","SVC","SVC","SVC","SVC")
-    temp <- tolower(settings.file$instrument$name)
-    #index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
-    index <- agrep(pattern=temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","spectral evolution psm-3500",
-                                  "evolution","psm-3500","psm 3500","svc","spectra vista","spec vista","hr 1024i",
-                                  "hr 1024","1024i","1024"),max=5,ignore.case = TRUE)
-    instrument <- inst[max(index)]
-  } else if (spec.file.ext==".asd") {
-    instrument <- "ASD"
-  } else if (spec.file.ext==".sed") {
-    instrument <- "SE"
-  }else if (spec.file.ext==".sig") {
-    instrument <- "SVC"
-  }
-  
-  # Input file extension
-  if (is.null(settings.file$options$spec.file.ext) && is.null(spec.file.ext)){ 
-    if(instrument=="ASD") (spec.file.ext=".asd")
-    if(instrument=="SE") (spec.file.ext=".sed")
-    if(instrument=="SVC") (spec.file.ext=".sig")
-    warning("No input file extension defined in settings file or function call")
-    warning(paste0("Using default: ", spec.file.ext))
-  } else if (!is.null(spec.file.ext)){
-    spec.file.ext <- spec.file.ext
-  } else if (!is.null(settings.file$options$spec.file.ext)){
-    spec.file.ext <- settings.file$options$spec.file.ext
-  }
-
-  
-  
-} ### End of function
+# plot.spectra <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,out.filename=NULL,
+#                          spec.file.ext=NULL,out.file.ext=".csv",settings.file=NULL){
+#   
+#   ### Set platform specific file path delimiter.  Probably will always be "/"
+#   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
+#   
+#   # Input directory
+#   if (is.null(settings.file) && is.null(file.dir)){
+#     stop("No input file or directory given in settings file or function call.")
+#   } else if (!is.null(file.dir)){
+#     file.dir <- file.dir
+#   } else if (!is.null(settings.file$spec.dir)){
+#     file.dir <- settings.file$spec.dir
+#   }
+#   
+#   # Output directory
+#   if (!is.null(out.dir)){
+#     out.dir <- out.dir
+#   } else if (!is.null(settings.file$output.dir)){
+#     out.dir <- settings.file$output.dir
+#   }
+#   
+#   # Instrument - ***This section needs to be refined***
+#   if (is.null(settings.file) && is.null(instrument) && is.null(spec.file.ext)){ 
+#     stop("No instrument defined in settings file or function call.")
+#   } else if (!is.null(instrument)){
+#     instrument <- instrument
+#   } else if (!is.null(settings.file$instrument$name)){
+#     inst <- c("ASD","ASD","ASD","SE","SE","SE","SE","SE","SE","SVC","SVC","SVC","SVC","SVC","SVC","SVC")
+#     temp <- tolower(settings.file$instrument$name)
+#     #index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
+#     index <- agrep(pattern=temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","spectral evolution psm-3500",
+#                                   "evolution","psm-3500","psm 3500","svc","spectra vista","spec vista","hr 1024i",
+#                                   "hr 1024","1024i","1024"),max=5,ignore.case = TRUE)
+#     instrument <- inst[max(index)]
+#   } else if (spec.file.ext==".asd") {
+#     instrument <- "ASD"
+#   } else if (spec.file.ext==".sed") {
+#     instrument <- "SE"
+#   }else if (spec.file.ext==".sig") {
+#     instrument <- "SVC"
+#   }
+#   
+#   # Input file extension
+#   if (is.null(settings.file$options$spec.file.ext) && is.null(spec.file.ext)){ 
+#     if(instrument=="ASD") (spec.file.ext=".asd")
+#     if(instrument=="SE") (spec.file.ext=".sed")
+#     if(instrument=="SVC") (spec.file.ext=".sig")
+#     warning("No input file extension defined in settings file or function call")
+#     warning(paste0("Using default: ", spec.file.ext))
+#   } else if (!is.null(spec.file.ext)){
+#     spec.file.ext <- spec.file.ext
+#   } else if (!is.null(settings.file$options$spec.file.ext)){
+#     spec.file.ext <- settings.file$options$spec.file.ext
+#   }
+# 
+#   
+#   
+# } ### End of function
 #==================================================================================================#
 
 #--------------------------------------------------------------------------------------------------#

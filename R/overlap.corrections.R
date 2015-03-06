@@ -392,10 +392,11 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
 
 #--------------------------------------------------------------------------------------------------#
 ##'
-##' A function to apply overlap and/or matching corrections to imported SVC spectra files
+##' A function to remove detector overlap in imported SE/SVC spectra files
 ##' 
-##' @name overlap.correction
-##'
+##' @name remove.overlap
+##' @title Remove wavelength-overlapped data from spectra.  Relevant for SE and SVC files
+##' 
 ##'
 ##'
 ##'
@@ -406,15 +407,39 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
 ##'@author Shawn P. Serbin
 ##'
 
-overlap.correction <- function(file.dir=NULL,out.dir=NULL){
+remove.overlap <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,instrument=NULL,
+                           output.file.ext=".csv",settings.file=NULL,
+                           spec.file.ext=NULL){
   
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
-  
-  # PLACE HOLDER
-  
-  print("*NOT YET IMPLEMENTED*")
 
+  # Input directory
+  if (is.null(settings.file) && is.null(file.dir)){
+    stop("No input file or directory given in settings file or function call.")
+  } else if (!is.null(file.dir)){
+    file.dir <- file.dir
+  } else if (!is.null(settings.file$spec.dir)){
+    file.dir <- settings.file$spec.dir
+  }
+
+  if (!file.exists(file.dir)){
+    stop("*** EROR: Input file directory is not valid ***")
+  }
+  
+  ### create output directory if it doesn't already exist
+  if (!is.null(out.dir)) {
+    out.dir <- out.dir
+  } else if (!is.null(settings.file$output.dir)) {
+    out.dir <- paste0(settings.file$output.dir,dlm,"overlap_removed/")
+  } else {
+    ind <- gregexpr(dlm, file.dir)[[1]]
+    out.dir <- paste0(substr(file.dir,ind[1], ind[length(ind)-1]-1),dlm,"overlap_removed/")
+  }
+  if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
+  
+  
+  
 } ### End of function
 #==================================================================================================#
 
