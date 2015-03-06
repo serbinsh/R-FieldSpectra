@@ -108,6 +108,10 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
     file.dir <- settings.file$spec.dir
   }
   
+  if (!file.exists(file.dir)){
+    stop("*** EROR: Input file directory is not valid ***")
+  }
+  
   # Output directory
   if (!is.null(out.dir)){
     out.dir <- out.dir
