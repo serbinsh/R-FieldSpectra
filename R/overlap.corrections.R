@@ -407,13 +407,64 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
 ##'@author Shawn P. Serbin
 ##'
 
+# NEED TO CLEAN UP!
 remove.overlap <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,instrument=NULL,
-                           output.file.ext=".csv",settings.file=NULL,
-                           spec.file.ext=NULL){
+                           output.file.ext=".csv",spec.file.ext=NULL,settings.file=NULL,
+                           ){
   
   ### Set platform specific file path delimiter.  Probably will always be "/"
   dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
-
+  
+  ### Determine instrument and spec file extension
+  
+  
+  
+  
+  
+  # Input file extension
+  if (is.null(settings.file$options$spec.file.ext) && is.null(spec.file.ext)){ 
+    if(instrument=="ASD") (spec.file.ext=".asd")
+    if(instrument=="SE") (spec.file.ext=".sed")
+    if(instrument=="SVC") (spec.file.ext=".sig")
+    warning("No input file extension defined in settings file or function call")
+    warning(paste0("Using default: ", spec.file.ext))
+  } else if (!is.null(spec.file.ext)){
+    spec.file.ext <- spec.file.ext
+  } else if (!is.null(settings.file$options$spec.file.ext)){
+    spec.file.ext <- settings.file$options$spec.file.ext
+  }
+  
+  
+  
+  
+  
+  # Instrument - ***This section needs to be refined***
+  if (is.null(settings.file) && is.null(instrument) && is.null(spec.file.ext)){ 
+    stop("No instrument defined in settings file or function call.")
+  } else if (!is.null(instrument)){
+    instrument <- instrument
+  } else if (!is.null(settings.file$instrument$name)){
+    inst <- c("ASD","ASD","ASD","SE","SE","SE","SE","SE","SE","SVC","SVC","SVC","SVC","SVC","SVC","SVC")
+    temp <- tolower(settings.file$instrument$name)
+    #index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
+    index <- agrep(pattern=temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","spectral evolution psm-3500",
+                                  "evolution","psm-3500","psm 3500","svc","spectra vista","spec vista","hr 1024i",
+                                  "hr 1024","1024i","1024"),max=5,ignore.case = TRUE)
+    instrument <- inst[max(index)]
+  } else if (spec.file.ext==".asd") {
+    instrument <- "ASD"
+  } else if (spec.file.ext==".sed") {
+    instrument <- "SE"
+  }else if (spec.file.ext==".sig") {
+    instrument <- "SVC"
+  }
+  
+  
+  
+  
+  
+  ### Setup directories
+  
   # Input directory
   if (is.null(settings.file) && is.null(file.dir)){
     stop("No input file or directory given in settings file or function call.")
@@ -437,6 +488,38 @@ remove.overlap <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,instrument=
     out.dir <- paste0(substr(file.dir,ind[1], ind[length(ind)-1]-1),dlm,"overlap_removed/")
   }
   if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
+  
+  # Create bad spectra folder. Spectra not used in averages
+  badspec.dir <- paste(out.dir,dlm,"Bad_Spectra",sep="")
+  if (! file.exists(badspec.dir)) dir.create(badspec.dir,recursive=TRUE)
+  
+  # Create white reference folder.
+  whiteref.dir <- paste(out.dir,dlm,"White_Reference_Spectra",sep="")
+  if (! file.exists(whiteref.dir)) dir.create(whiteref.dir,recursive=TRUE)
+  
+  # Remove any previous output in out.dir
+  unlink(list.files(out.dir,full.names=TRUE),recursive=FALSE,force=TRUE)
+  unlink(list.files(badspec.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
+  unlink(list.files(whiteref.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
+  
+  
+  
+  
+  
+  ### Select optional spectra type for processing and plotting
+  if (!is.null(spec.type)) {
+    s.type <- c("Reflectance","Transmittance","Canopy")
+    #index <- agrep(pattern=spec.type,c("reflectance","transmittance"),ignore.case = TRUE,max.distance=0.3)
+    index <- pmatch(tolower(spec.type),c("reflectance","transmittance","canopy"))
+    spec.type <- s.type[index]
+  } else {
+    spec.type <- "Reflectance"
+  }
+  print(paste0("Spectra Type: ",spec.type))
+  print(" ")
+  
+  
+  
   
   
   
