@@ -409,6 +409,9 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
       
       # Output plot of white ref spectra for quick reference
       rng <- range(out.spec[,2])
+      if (rng[1]<0) rng[1] <- 0
+      if (rng[2]>1) rng[2] <- 1
+      #print(rng) 
       ylimit <- c(rng[1],rng[2])
       png(file=paste(whiteref.dir,dlm,spec.name,".png",sep=""),width=800,height=600,res=100)
       plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",

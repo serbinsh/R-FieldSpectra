@@ -127,6 +127,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   } else if (!is.null(settings.file$instrument$name)){
     inst <- c("ASD","ASD","ASD","SE","SE","SE","SE","SE","SE","SVC","SVC","SVC","SVC","SVC","SVC","SVC")
     temp <- tolower(settings.file$instrument$name)
+    #temp <- "se"
     #index <- pmatch(temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","evolution"))
     index <- agrep(pattern=temp,c("asd","fieldspec","fieldspec 3","se","spectral evolution","spectral evolution psm-3500",
                                         "evolution","psm-3500","psm 3500","svc","spectra vista","spec vista","hr 1024i",
@@ -159,6 +160,7 @@ extract.metadata <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,spec.fil
   }
   
   # Run appropriate function for meta-data extraction
+  #print(paste0("--- Instrument: ", instrument)) <- For Debugging
   do.call(paste("extract.metadata",tolower(instrument),sep="."),args = list(file.dir=file.dir,out.dir=out.dir,
                                                                             spec.file.ext=spec.file.ext,
                                                                             output.file.ext=output.file.ext,
@@ -649,9 +651,10 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
   for (i in 1:length(se.files)){
     #data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[2],":")[[1]]
     #data.line.temp <- strsplit(system(paste("grep -n","Data", se.files[i]),intern=TRUE)[1],":")[[1]]
-    data.line.temp <- system(paste("grep -n","Data", se.files[i]),intern=TRUE)
-    data.line.temp <- strsplit(data.line.temp,":")[[length(data.line.temp)]]
-    data.line[i] <- as.numeric(data.line.temp[1])
+    data.line.temp1 <- system(paste("grep -n","Data", se.files[i]),intern=TRUE)
+    #data.line.temp1 <- system(paste("grep -n","Data:", se.files[i]),intern=TRUE) #updated
+    data.line.temp2 <- strsplit(data.line.temp1,":")[[length(data.line.temp1)]]
+    data.line[i] <- as.numeric(data.line.temp2[1])
     file.head <- readLines(se.files[i],n=data.line[i]-1)
 
     inst[i] <- gsub(" ","",(strsplit(file.head[4],":")[[1]])[2])
@@ -693,7 +696,7 @@ extract.metadata.se <- function(file.dir,out.dir,spec.file.ext,output.file.ext,t
     
     comments[i] <- gsub(" ","",(strsplit(file.head[1],":")[[1]])[2])
 
-    rm(data.line.temp,file.head,temp.1,temp.2,temp.3)
+    rm(data.line.temp1,data.line.temp2,file.head,temp.1,temp.2,temp.3)
   }
 
   # Create output
