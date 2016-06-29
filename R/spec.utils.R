@@ -783,6 +783,7 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
  
   # Run metadata extraction
   for (i in 1:length(svc.files)){
+    print(i)
     data.line.temp <- system(paste("grep -n","data=", svc.files[i]),intern=TRUE)
     data.line.temp <- strsplit(data.line.temp,":")[[length(data.line.temp)]]
     data.line[i] <- as.numeric(data.line.temp[1])
@@ -824,8 +825,14 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     } else {
       GPS.active[i] <- "yes"
       ref.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[1]
+      if (ref.lattitude[i]=="") {
+        ref.lattitude[i] <- -9999
+      }
       target.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[2]
-      if (grepl(pattern="N",ref.lattitude[i],ignore.case=TRUE)){
+      if (target.lattitude[i]=="") {
+        target.lattitude[i] <- -9999
+      }
+      if (grepl(pattern="N",ref.lattitude[i],ignore.case=TRUE) || grepl(pattern="N",target.lattitude[i],ignore.case=TRUE)){
         lat.direction <- "N"
         lat.sign <- 1
       } else {
@@ -833,8 +840,14 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
         lat.sign <- -1
       }
       ref.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2]),",")[[1]])[1]
+      if (ref.longitude[i]=="") {
+        ref.longitude[i] <- -9999
+      }
       target.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2]),",")[[1]])[2]
-      if (grepl(pattern="E",ref.longitude[i],ignore.case=TRUE)){
+      if (target.longitude[i]=="") {
+        target.longitude[i] <- -9999
+      }
+      if (grepl(pattern="E",ref.longitude[i],ignore.case=TRUE) || grepl(pattern="E",target.longitude[i],ignore.case=TRUE)){
         lat.direction <- "E"
         long.sign <- 1
       } else {
@@ -906,7 +919,7 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     # Get comments - needs refinement
     comments[i] <- substr(file.head[22],gregexpr(pattern="=",file.head[22])[[1]][1]+2,
                                       nchar(file.head[22])-1)
-  }
+  } # end of file loop
   
   # Create output
   overlap.transition.wavelengths <- sub(",","/",overlap.transition.wavelengths)

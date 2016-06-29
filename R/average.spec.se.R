@@ -277,9 +277,9 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   }
   names(spec.avg) <- c("Spectra",waves)
   
-  ### Get spectra sdev  --- THIS IS A SLOW POINT. NEED TO WORK ON SPEEDING UP
-  dims <- dim(good.spec)
-  spec.sdev <- aggregate(.~Spectra,data=good.spec[,2:dims[2]],sd,simplify=TRUE)
+  ### Get spectra sdev  --- THIS IS A SLOW POINT. NEED TO WORK ON SPEEDING UP !!! TROUBLE SPOT< TOO MANY COLUMNS
+  dims <- dim(good.spec) 
+  spec.sdev <- aggregate(.~Spectra,data=good.spec[,2:dims[2]],sd,na.rm = TRUE, simplify=TRUE)
   spec.sdev[is.na(spec.sdev)]=0
   spec.avg.names <- droplevels(spec.avg$Spectra)
   dims <- dim(spec.avg)
