@@ -783,7 +783,7 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
  
   # Run metadata extraction
   for (i in 1:length(svc.files)){
-    print(i)
+    #print(i)
     data.line.temp <- system(paste("grep -n","data=", svc.files[i]),intern=TRUE)
     data.line.temp <- strsplit(data.line.temp,":")[[length(data.line.temp)]]
     data.line[i] <- as.numeric(data.line.temp[1])
@@ -855,18 +855,26 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
         long.sign <- -1
       }
       # Convert to decimal degreees
-      ref.lattitude[i] <- lat.sign*((as.numeric(substr(ref.lattitude[i],1,which(strsplit(ref.lattitude[i], '')[[1]]=='.')-3)) + 
-                                       (as.numeric(substr(ref.lattitude[i],which(strsplit(ref.lattitude[i], '')[[1]]=='.')-2,
-                                                          nchar(ref.lattitude[i])-1))/60)) )
-      target.lattitude[i] <- lat.sign*((as.numeric(substr(target.lattitude[i],1,which(strsplit(target.lattitude[i], '')[[1]]=='.')-3)) + 
-                                          (as.numeric(substr(target.lattitude[i],which(strsplit(target.lattitude[i], '')[[1]]=='.')-2,
-                                                             nchar(target.lattitude[i])-1))/60)) )
-      ref.longitude[i] <- long.sign*((as.numeric(substr(ref.longitude[i],1,which(strsplit(ref.longitude[i], '')[[1]]=='.')-3)) + 
-                                       (as.numeric(substr(ref.longitude[i],which(strsplit(ref.longitude[i], '')[[1]]=='.')-2,
-                                                          nchar(ref.longitude[i])-1))/60)) )
-      target.longitude[i] <- long.sign*((as.numeric(substr(target.longitude[i],1,which(strsplit(target.longitude[i], '')[[1]]=='.')-3)) + 
-                                          (as.numeric(substr(target.longitude[i],which(strsplit(target.longitude[i], '')[[1]]=='.')-2,
-                                                             nchar(target.longitude[i])-1))/60)) )
+      if (ref.lattitude[i]!=as.numeric(-9999)){
+        ref.lattitude[i] <- lat.sign*((as.numeric(substr(ref.lattitude[i],1,which(strsplit(ref.lattitude[i], '')[[1]]=='.')-3)) + 
+                                         (as.numeric(substr(ref.lattitude[i],which(strsplit(ref.lattitude[i], '')[[1]]=='.')-2,
+                                                            nchar(ref.lattitude[i])-1))/60)) )
+      }
+      if (target.lattitude[i]!=as.numeric(-9999)){
+        target.lattitude[i] <- lat.sign*((as.numeric(substr(target.lattitude[i],1,which(strsplit(target.lattitude[i], '')[[1]]=='.')-3)) + 
+                                            (as.numeric(substr(target.lattitude[i],which(strsplit(target.lattitude[i], '')[[1]]=='.')-2,
+                                                               nchar(target.lattitude[i])-1))/60)) )
+      }
+      if (ref.longitude[i]!=as.numeric(-9999)){
+        ref.longitude[i] <- long.sign*((as.numeric(substr(ref.longitude[i],1,which(strsplit(ref.longitude[i], '')[[1]]=='.')-3)) + 
+                                          (as.numeric(substr(ref.longitude[i],which(strsplit(ref.longitude[i], '')[[1]]=='.')-2,
+                                                             nchar(ref.longitude[i])-1))/60)) )
+      }
+      if (target.longitude[i]!=as.numeric(-9999)){
+        target.longitude[i] <- long.sign*((as.numeric(substr(target.longitude[i],1,which(strsplit(target.longitude[i], '')[[1]]=='.')-3)) + 
+                                             (as.numeric(substr(target.longitude[i],which(strsplit(target.longitude[i], '')[[1]]=='.')-2,
+                                                                nchar(target.longitude[i])-1))/60)) )
+      }
       
       # GPS time
       ref.gps.time[i] <- (strsplit(gsub(" ","",(strsplit(file.head[21],"=")[[1]])[2]),",")[[1]])[1]
