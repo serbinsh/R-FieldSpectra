@@ -29,10 +29,14 @@ From there, you should be able to load the package in your typical R session.
 
 ## Quick example runs (after installation)
 ```R
-# Leaf level responses to light and temperature
-file <- system.file("examples/Example_Leaf_Photosynthesis.R",package="CanopyPhotosynthesis")
-source(file)
-# This should generate two plots, one showing the An vs PAR and the second showing the temperature sensitivities of photosynthesis and key parameters such as Vcmax, Jmax, and Rd
+### Extract metadata
+# ASD
+file <- system.file("extdata/PM01_TIAM_B_LC_REFL00005.asd",package="FieldSpectra")
+output <- extract.metadata(file,instrument="ASD")
+
+# Spectral Evolution
+file <- system.file("extdata/cvars_grape_leaf1_lc_rg_01236.sed",package="FieldSpectra")
+output <- extract.metadata(file,instrument="SE")
 
 # MORE IN DEVELOPMENT
 ```
