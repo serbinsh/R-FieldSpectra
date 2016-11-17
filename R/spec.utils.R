@@ -905,13 +905,23 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     matching.type[i] <- gsub(" ","",substr(file.head[24],
            regexec(pattern="Matching Type: ?(\\w+)",file.head[24])[[1]][2],
            gregexpr(pattern="@",file.head[24])[[1]][2]-1))
-    if (matching.type[i]=="Radiance" || matching.type[i]=="Reflectance"){
-      overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[24],
-                                                         gregexpr(pattern="@",file.head[24])[[1]][2]+1,
-                                                         gregexpr(pattern="/",file.head[24])[[1]][1]-1))
-    } else {
+    
+    if (is.null(matching.type[i])) {
       overlap.matching.wavelengths[i] <- paste("NA","NA",sep=",")
+    } else if (matching.type[i]=="Radiance" || matching.type[i]=="Reflectance") {
+      overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[24],
+                                              gregexpr(pattern="@",file.head[24])[[1]][2]+1,
+                                              gregexpr(pattern="/",file.head[24])[[1]][1]-1))
     }
+    
+#    if (matching.type[i]=="Radiance" || matching.type[i]=="Reflectance"){
+#      overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[24],
+#                                                         gregexpr(pattern="@",file.head[24])[[1]][2]+1,
+#                                                         gregexpr(pattern="/",file.head[24])[[1]][1]-1))
+#    } else {
+#      overlap.matching.wavelengths[i] <- paste("NA","NA",sep=",")
+#    }
+    
     if (grepl(pattern='NIR-SWIR [Oo]ff',file.head[24])){
       nir.swir.alg[i] <- "No"
     } else if (grepl(pattern='NIR-SWIR [Oo]n',file.head[24])){
