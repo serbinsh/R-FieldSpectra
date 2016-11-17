@@ -905,15 +905,13 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     matching.type[i] <- gsub(" ","",substr(file.head[24],
            regexec(pattern="Matching Type: ?(\\w+)",file.head[24])[[1]][2],
            gregexpr(pattern="@",file.head[24])[[1]][2]-1))
-    
-    if (is.null(matching.type[i])) {
+    if (is.na(matching.type[i])) {
       overlap.matching.wavelengths[i] <- paste("NA","NA",sep=",")
     } else if (matching.type[i]=="Radiance" || matching.type[i]=="Reflectance") {
       overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[24],
                                               gregexpr(pattern="@",file.head[24])[[1]][2]+1,
                                               gregexpr(pattern="/",file.head[24])[[1]][1]-1))
     }
-    
 #    if (matching.type[i]=="Radiance" || matching.type[i]=="Reflectance"){
 #      overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[24],
 #                                                         gregexpr(pattern="@",file.head[24])[[1]][2]+1,
