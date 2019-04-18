@@ -825,11 +825,11 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     } else {
       GPS.active[i] <- "yes"
       ref.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[1]
-      if (ref.lattitude[i]=="") {
+      if (ref.lattitude[i]=="" | is.na(ref.lattitude[i])) {
         ref.lattitude[i] <- -9999
       }
       target.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[2]
-      if (target.lattitude[i]=="") {
+      if (target.lattitude[i]=="" | is.na(target.lattitude[i])) {
         target.lattitude[i] <- -9999
       }
       if (grepl(pattern="N",ref.lattitude[i],ignore.case=TRUE) || grepl(pattern="N",target.lattitude[i],ignore.case=TRUE)){
