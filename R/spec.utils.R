@@ -840,11 +840,11 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
         lat.sign <- -1
       }
       ref.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2]),",")[[1]])[1]
-      if (ref.longitude[i]=="") {
+      if (ref.longitude[i]=="" | is.na(ref.longitude[i])) {
         ref.longitude[i] <- -9999
       }
       target.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2]),",")[[1]])[2]
-      if (target.longitude[i]=="") {
+      if (target.longitude[i]=="" | is.na(target.longitude[i])) {
         target.longitude[i] <- -9999
       }
       if (grepl(pattern="E",ref.longitude[i],ignore.case=TRUE) || grepl(pattern="E",target.longitude[i],ignore.case=TRUE)){
