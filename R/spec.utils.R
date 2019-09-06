@@ -770,6 +770,7 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
   ext.data.dark <- rep(NA,length(svc.files));ext.data.mask <- rep(NA,length(svc.files));fore.optic <- rep(NA,length(svc.files));
   detector.temp <- rep(NA,length(svc.files));battery <- rep(NA,length(svc.files));error.code <- rep(NA,length(svc.files));
   raw.units <- rep(NA,length(svc.files));date.time <- rep(NA,length(svc.files));date <- rep(NA,length(svc.files));
+  wrtimelocal <- rep(NA,length(svc.files));spectimelocal <- rep(NA,length(svc.files));
   local.time <- rep(NA,length(svc.files));GPS.active <- rep(NA,length(svc.files));
   ref.lattitude <- rep(NA,length(svc.files));target.lattitude <- rep(NA,length(svc.files));
   ref.longitude <- rep(NA,length(svc.files));target.longitude <- rep(NA,length(svc.files));
@@ -809,8 +810,13 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     
     # Split into Date and Time.  Needs refining
     date[i] <- gsub(" ","",(substr(date.time[i],1,10)))
-    local.time[i] <- paste0(gsub(" ","",(substr(date.time[i],11,21))),",",
-                            gsub(" ","",(substr(date.time[i],34,43))))
+    #local.time[i] <- paste0(gsub(" ","",(substr(date.time[i],11,21))),",",
+    #                        gsub(" ","",(substr(date.time[i],34,43))))
+    wrtimelocal[i] <- gsub(",","",gsub(" ","",(substr(date.time[i],11,21))))
+    temp_time_2 <- gsub(" ","",strsplit(date.time[i], split = ",")[[1]][2])
+    spectimelocal[i] <- gsub(date[i],"",temp_time_2)
+    rm(temp_time_2)
+    local.time[i] <- paste(wrtimelocal[i],spectimelocal[i], sep=",")
     #
     
     # GPS on?  Clean this up
