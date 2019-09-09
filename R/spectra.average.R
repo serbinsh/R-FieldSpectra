@@ -7,7 +7,6 @@
 #--------------------------------------------------------------------------------------------------#
 ##'
 ##' @name spec.avg
-##' Temporary name for function.  Change to average.spec once all are consolidated into a single call
 ##' 
 ##' @title Average associated spectra files into a single spectrum. Works on a single spectra or a 
 ##' directory.
