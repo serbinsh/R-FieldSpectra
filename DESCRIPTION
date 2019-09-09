@@ -2,14 +2,13 @@ Package: FieldSpectra
 Type: Package
 Title: Functions for processing field spectroscopy data
 Version: 0.9222
-Date: 2015-03-05
+Date: 2019-09-09
 Author: Shawn P. Serbin
-Maintainer: Shawn P. Serbin <serbin@wisc.edu>
+Maintainer: Shawn P. Serbin <sserbin@bnl.gov>
 Description: A field spectroscopy package containing functions to process
-    spectral files collected with an Analytical Spectral Devices (ASD) or
+    spectral files collected using an Analytical Spectral Devices (ASD) or
     Spectral Evolution instrument. The goal is to streamline and standardize
-    spectral data processing for use in remote sensing, ecology, and plant
-    ecophysiological research.
+    leaf/canopy field spectroscopy data processing.
 Depends:
     XML,
     Hmisc,
@@ -18,9 +17,10 @@ Depends:
 Suggests:
     testthat,
     devtools,
-    Rprospect
+    PEcAnRTM,
+    spectrolab
 SystemRequirements: 
-OS_type: Windows, unix, mac
+OS_type: unix, mac
 License: FreeBSD + file LICENSE
 Copyright: Authors
 LazyLoad: yes
