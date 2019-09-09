@@ -56,23 +56,20 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
   # Rathter than reading/writing for each file in serial
   ## Allow output for single spec files
   
-  ### Set platform specific file path delimiter.  Probably will always be "/"
-  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
-  
   ### Check for proper input
   if (is.null(settings.file) && is.null(file.dir)){
     stop("No input file directory given in settings file or function call.  Please correct.")
   } else if (!is.null(file.dir)){
-    file.dir <- file.dir
+    file.dir <- file.path(file.dir)
   } else if (!is.null(settings.file$spec.dir)){
-    file.dir <- settings.file$spec.dir
+    file.dir <- file.path(settings.file$spec.dir)
   } 
   
   ### create output directory if it doesn't already exist and is set
   if (!is.null(out.dir)) {
-    out.dir <- paste0(out.dir, dlm, "ascii_files/")
+    out.dir <- file.path(out.dir, "ascii_files/")
   } else if (!is.null(settings.file$output.dir)) {
-    out.dir <- paste0(settings.file$output.dir, dlm, "ascii_files/")
+    out.dir <- file.path(settings.file$output.dir, "ascii_files/")
   }
   if (!is.null(out.dir)) {
     if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
@@ -131,7 +128,6 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
   #--------------------- Begin function -----------------------#
   
   ### Run extract.metadata
-  #print(file.dir)
   extract.metadata(file.dir=file.dir,out.dir=gsub(pattern="ascii_files/","",out.dir),instrument="ASD",
                    spec.file.ext=spec.file.ext,output.file.ext=output.file.ext)
   
@@ -147,9 +143,12 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
     
     ### Define wavelengths using file header, if not defined already
     if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
-      start.wave <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",spec.file.ext=spec.file.ext)$Calibrated_Starting_Wavelength
-      step.size <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",spec.file.ext=spec.file.ext)$Calibrated_Wavelength_Step
-      channels <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",spec.file.ext=spec.file.ext)$Detector_Channels
+      start.wave <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",
+                                     spec.file.ext=spec.file.ext)$Calibrated_Starting_Wavelength
+      step.size <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",
+                                    spec.file.ext=spec.file.ext)$Calibrated_Wavelength_Step
+      channels <- extract.metadata(file.dir=asd.files.full[1],instrument="ASD",
+                                   spec.file.ext=spec.file.ext)$Detector_Channels
       end.wave <- start.wave+((channels-1)/step.size)
       lambda <- seq(start.wave,end.wave,step.size)
     } else {
@@ -182,7 +181,7 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
       meas <- rep(0, length(lambda))
       
       ### Check whether file is an older ASD file.  Should update this.
-      meas = readBin(to.read, what=double(), n=length(lambda), size=4, endian = .Platform$endian)
+      meas <- readBin(to.read, what=double(), n=length(lambda), size=4, endian = .Platform$endian)
       if (range(meas, na.rm=TRUE)[2] < 2){ # Less than 2 for WHITE refl.
         close(to.read)
         out.spec = array(meas)      	### Output spectra array.  This is the resulting spectra
@@ -246,7 +245,8 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
         if (rng[2]>1) rng[2] <- 1
         ylimit <- c(rng[1], rng[2])
         png(file=paste0(out.dir, dlm, tmp[1], ".png"), width=800, height=600, res=100)
-        plot(output.spectra[, 1], output.spectra[, 2], cex=0.01, xlim=c(350, 2500), ylim=ylimit, xlab="Wavelength (nm)",
+        plot(output.spectra[, 1], output.spectra[, 2], cex=0.01, xlim=c(350, 2500), 
+             ylim=ylimit, xlab="Wavelength (nm)",
             ylab="Reflectance (%)", main=out.ascii, cex.axis=1.3, cex.lab=1.3)
         lines(output.spectra[, 1], output.spectra[, 2], lwd=2)
         box(lwd=2.2)
@@ -269,9 +269,12 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
     
     ### Define wavelengths using file header, if not defined already
     if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
-      start.wave <- extract.metadata(file.dir=file.dir[1],instrument="ASD",spec.file.ext=spec.file.ext)$Calibrated_Starting_Wavelength
-      step.size <- extract.metadata(file.dir=file.dir[1],instrument="ASD",spec.file.ext=spec.file.ext)$Calibrated_Wavelength_Step
-      channels <- extract.metadata(file.dir=file.dir[1],instrument="ASD",spec.file.ext=spec.file.ext)$Detector_Channels
+      start.wave <- extract.metadata(file.dir=file.dir[1],instrument="ASD",
+                                     spec.file.ext=spec.file.ext)$Calibrated_Starting_Wavelength
+      step.size <- extract.metadata(file.dir=file.dir[1],instrument="ASD",
+                                    spec.file.ext=spec.file.ext)$Calibrated_Wavelength_Step
+      channels <- extract.metadata(file.dir=file.dir[1],instrument="ASD",
+                                   spec.file.ext=spec.file.ext)$Detector_Channels
       end.wave <- start.wave+((channels-1)/step.size)
       lambda <- seq(start.wave,end.wave,step.size)
     } else {
