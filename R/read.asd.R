@@ -55,7 +55,7 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
   ## TODO: Reformat function for speed.  Read in all data to array then generate output spec and images.
   # Rathter than reading/writing for each file in serial
   ## Allow output for single spec files
-  
+
   ### Check for proper input
   if (is.null(settings.file) && is.null(file.dir)){
     stop("No input file directory given in settings file or function call.  Please correct.")
@@ -67,9 +67,9 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
   
   ### create output directory if it doesn't already exist and is set
   if (!is.null(out.dir)) {
-    out.dir <- file.path(out.dir, "ascii_files/")
+    out.dir <- file.path(out.dir, "ascii_files")
   } else if (!is.null(settings.file$output.dir)) {
-    out.dir <- file.path(settings.file$output.dir, "ascii_files/")
+    out.dir <- file.path(settings.file$output.dir, "ascii_files")
   }
   if (!is.null(out.dir)) {
     if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
@@ -128,7 +128,7 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
   #--------------------- Begin function -----------------------#
   
   ### Run extract.metadata
-  extract.metadata(file.dir=file.dir,out.dir=gsub(pattern="ascii_files/","",out.dir),instrument="ASD",
+  extract.metadata(file.dir=file.dir,out.dir=gsub(pattern="ascii_files","",out.dir),instrument="ASD",
                    spec.file.ext=spec.file.ext,output.file.ext=output.file.ext)
   
   ### Check whether passed a single file or a directory of files
@@ -233,7 +233,8 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
         out.ascii <- paste0(tmp[1], output.file.ext)     # setup output file name
         
         ### Below for single output directory
-        write.csv(output.spectra, paste0(out.dir, dlm, out.ascii), row.names=FALSE)
+        #write.csv(output.spectra, paste0(out.dir, dlm, out.ascii), row.names=FALSE)
+        write.csv(output.spectra, file.path(out.dir,out.ascii), row.names=FALSE)
       }
 
       ### Output plot of spectra for quick reference
@@ -244,7 +245,8 @@ read.asd <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave=NULL,e
         if (rng[1]<0) rng[1] <- 0
         if (rng[2]>1) rng[2] <- 1
         ylimit <- c(rng[1], rng[2])
-        png(file=paste0(out.dir, dlm, tmp[1], ".png"), width=800, height=600, res=100)
+        #png(file=paste0(out.dir, dlm, tmp[1], ".png"), width=800, height=600, res=100)
+        png(file=file.path(out.dir, paste0(tmp[1], ".png")), width=800, height=600, res=100)
         plot(output.spectra[, 1], output.spectra[, 2], cex=0.01, xlim=c(350, 2500), 
              ylim=ylimit, xlab="Wavelength (nm)",
             ylab="Reflectance (%)", main=out.ascii, cex.axis=1.3, cex.lab=1.3)

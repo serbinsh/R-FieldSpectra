@@ -54,7 +54,7 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
   # Clean up function, improve generality
   
   ### Set platform specific file path delimiter.  Probably will always be "/"
-  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter?
+  dlm <- .Platform$file.sep # <--- What is the platform specific delimiter? 
   
   ### Check for proper input directory
   if (is.null(settings.file$output.dir) && is.null(file.dir)){
@@ -62,17 +62,18 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
   } else if (!is.null(settings.file$output.dir)){
-    file.dir <- paste(settings.file$output.dir,dlm,"ascii_files/",sep="")
+    #file.dir <- paste(settings.file$output.dir,dlm,"ascii_files/",sep="")
+    file.dir <- file.path(settings.file$output.dir,"ascii_files")
   } 
   
   ### create output directory if it doesn't already exist
   if (!is.null(out.dir)) {
     out.dir <- out.dir
   } else if (!is.null(settings.file$output.dir)) {
-    out.dir <- paste(settings.file$output.dir,dlm,"jc_files/",sep="")
+    #out.dir <- paste(settings.file$output.dir,dlm,"jc_files/",sep="")
+    out.dir <- file.path(settings.file$output.dir,"jc_files")
   } else {
-    ind <- gregexpr(dlm, file.dir)[[1]]
-    out.dir <- paste(substr(file.dir,ind[1], ind[length(ind)-1]-1),dlm,"jc_files",sep="")
+    out.dir <- file.path(dirname(file.dir),"jc_files")
   }
   if (!is.null(out.dir)) {
     if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
@@ -80,7 +81,8 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
   
   ### Create bad spectra folder. Spectra not corrected
   if (!is.null(out.dir)) {
-    badspec.dir <- paste(out.dir,dlm,"Bad_Spectra",sep="")
+    #badspec.dir <- paste(out.dir,dlm,"Bad_Spectra",sep="")
+    badspec.dir <- file.path(out.dir,"Bad_Spectra")
     if (! file.exists(badspec.dir)) dir.create(badspec.dir,recursive=TRUE)
   }
   
@@ -137,10 +139,11 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
   
   ### Spectra metadata.
   if (is.null(metadata.file)) {
-    metadata.dir <- gsub(pattern="jc_files/","",out.dir)
+    metadata.dir <- gsub(pattern="jc_files","",out.dir)
     metadata.file <- list.files(path=metadata.dir,pattern="metadata",full.names=FALSE)
     print(paste("------- Using metadata file: ",metadata.file,sep=""))
-    metadata <- read.csv(paste(settings.file$output.dir,dlm,metadata.file,sep=""))
+    #metadata <- read.csv(paste(settings.file$output.dir,dlm,metadata.file,sep=""))
+    metadata <- read.csv(file.path(settings.file$output.dir,metadata.file))
   } else {
     metadata <- read.csv(metadata.file,header=T)
   }
@@ -203,7 +206,7 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
     
     # Spec name
     tmp <- unlist(strsplit(ascii.files[i],paste("\\",output.file.ext,sep="")))  # <--- remove file extension from file name
-    
+
     #---------------- Setup Wavelengths --------------------------------#
     if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
       # Using metadata info
@@ -244,7 +247,8 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
     
     ### Read in spec file
     out.spec <- array(0,(end.wave-start.wave)+1)       # refl or trans
-    spec.file <- read.csv(paste(file.dir,dlm,ascii.files[i],sep=""))
+    #spec.file <- read.csv(paste(file.dir,dlm,ascii.files[i],sep=""))
+    spec.file <- read.csv(file = file.path(file.dir,ascii.files[i]))
     spectra <- spec.file[,2]
     zero.chk <- sum(spectra)
     
@@ -330,7 +334,8 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
       info[j,4] <- "No" # <--- Not corrected
       
       # Output uncorrected spectra
-      write.csv(out.spec,paste(badspec.dir,dlm,out.filename,sep=""),row.names=FALSE)
+      #write.csv(out.spec,paste(badspec.dir,dlm,out.filename,sep=""),row.names=FALSE)
+      write.csv(out.spec,file.path(badspec.dir,out.filename),row.names=FALSE)
       
       # Output plot of uncorrected spectra for quick reference
       # Create output images if requested
@@ -339,7 +344,8 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
         if (rng[1]<0) rng[1] <- 0
         if (rng[2]>1) rng[2] <- 1
         ylimit <- c(rng[1],rng[2])
-        png(file=paste(badspec.dir,dlm,tmp[1],".png",sep=""),width=800,height=600,res=100)
+        #png(file=paste(badspec.dir,dlm,tmp[1],".png",sep=""),width=800,height=600,res=100)
+        png(file=file.path(badspec.dir,paste0(tmp[1],".png")),width=800,height=600,res=100)
         plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
              ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
         lines(out.spec[,1], out.spec[,2],lwd=2)
@@ -355,7 +361,8 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
       info[j,4] <- "Yes" # <--- Corrected
       
       # Output corrected spectra
-      write.csv(out.spec,paste(out.dir,dlm,out.filename,sep=""),row.names=FALSE)
+      #write.csv(out.spec,paste(out.dir,dlm,out.filename,sep=""),row.names=FALSE)
+      write.csv(x = out.spec,file = file.path(out.dir,out.filename),row.names=FALSE)
       
       # Output plot of spectra for quick reference
       # Create output images if requested
@@ -364,7 +371,8 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
         if (rng[1]<0) rng[1] <- 0
         if (rng[2]>1) rng[2] <- 1
         ylimit <- c(rng[1],rng[2])
-        png(file=paste(out.dir,dlm,tmp[1],".png",sep=""),width=800,height=600,res=100)
+        #png(file=paste(out.dir,dlm,tmp[1],".png",sep=""),width=800,height=600,res=100)
+        png(file=file.path(out.dir,paste0(tmp[1],".png")),width=800,height=600,res=100)
         plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
              ylab="Reflectance (%)", main=out.filename,cex.axis=1.3,cex.lab=1.3)
         lines(out.spec[,1], out.spec[,2],lwd=2)
@@ -385,7 +393,8 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
   close(pb)
   
   ### Output diagnostic info to jc directory
-  write.csv(info,paste(out.dir,dlm,"Spectra_Diagnostics.csv",sep=""),row.names=FALSE)
+  #write.csv(info,paste(out.dir,dlm,"Spectra_Diagnostics.csv",sep=""),row.names=FALSE)
+  write.csv(x = info,file = file.path(out.dir,"Spectra_Diagnostics.csv"),row.names=FALSE)
 } ### End of function
 #==================================================================================================#
 

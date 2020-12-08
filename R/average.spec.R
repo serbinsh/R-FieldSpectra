@@ -64,22 +64,21 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   } else if (!is.null(file.dir)){
     file.dir <- file.dir
   } else if (is.null(file.dir) && !is.null(settings.file$output.dir)){
-    file.dir <- paste(settings.file$output.dir,dlm,"jc_files/",sep="")
+    file.dir <- file.path(settings.file$output.dir,"jc_files")
   } 
   
   ### create output directory if it doesn't already exist
   if (!is.null(out.dir)) {
     out.dir <- out.dir
   } else if (!is.null(settings.file$output.dir)) {
-    out.dir <- paste(settings.file$output.dir,dlm,"averaged_files/",sep="")
+    out.dir <- file.path(settings.file$output.dir,"averaged_files")
   } else {
-    ind <- gregexpr(dlm, file.dir)[[1]]
-    out.dir <- paste(substr(file.dir,ind[1], ind[length(ind)-1]-1),dlm,"averaged_files",sep="")
+    out.dir <- file.path(dirname(file.dir),"averaged_files")
   }
   if (!file.exists(out.dir)) dir.create(out.dir,recursive=TRUE)
   
   ### Create bad spectra folder. Spectra not corrected
-  badspec.dir <- paste(out.dir,dlm,"Bad_Spectra",sep="")
+  badspec.dir <- file.path(out.dir,"Bad_Spectra")
   if (! file.exists(badspec.dir)) dir.create(badspec.dir,recursive=TRUE)
   
   ### Remove any previous output in out.dir
@@ -164,10 +163,10 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   
   ### Spectra metadata.
   if (is.null(metadata.file)) {
-    metadata.dir <- gsub(pattern="jc_files/","",file.dir)
+    metadata.dir <- gsub(pattern="jc_files","",file.dir)
     metadata.file <- list.files(path=metadata.dir,pattern="metadata",full.names=FALSE)
     print(paste("------- Using metadata file: ",metadata.file,sep=""))
-    metadata <- read.csv(paste(settings.file$output.dir,dlm,metadata.file,sep=""))
+    metadata <- read.csv(file = file.path(settings.file$output.dir,metadata.file))
   } else {
     metadata <- read.csv(metadata.file,header=T)
   }
@@ -235,9 +234,9 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   dims <- dim(good.spec)
   
   ### Update diagnostic info
-  for (i in 1:dim(in.spec3)[1]){
-    info[i,1] <- as.character(droplevels(in.spec3[i,1]))
-    if (as.character(droplevels(in.spec3[i,1])) %in% droplevels(bad.spec[,1])){
+  for (i in 1:dim(in.spec3)[1]) {
+    info[i,1] <- as.character(in.spec3[i,1])
+    if (as.character(in.spec3[i,1]) %in% as.character(bad.spec[,1])) {
       info[i,2] <- "Failed"
       info[i,3] <- as.numeric(round(in.spec3[i,"Wave_450"],4))
       info[i,4] <- "No"
@@ -270,7 +269,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   dims <- dim(good.spec)
   spec.sdev <- aggregate(.~Spectra,data=good.spec[,2:dims[2]],sd,simplify=TRUE)
   spec.sdev[is.na(spec.sdev)]=0
-  spec.avg.names <- droplevels(spec.avg$Spectra)
+  spec.avg.names <- spec.avg$Spectra
   dims <- dim(spec.avg)
   rm(mat.data,ind)
   
@@ -307,7 +306,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
   spec.lower <- as.matrix(spec.lower[,-1])
   for (i in 1:length(ind)){
     ind.avg <- ind[i]
-    orig.spec.name <- droplevels(good.spec[i,1])
+    orig.spec.name <- good.spec[i,1]
     # run check of individual spectra against the group mean
     # need to make sure indices are alligned
     # window <- 151:2051 # 500 - 2400
