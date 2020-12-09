@@ -5,11 +5,21 @@
 \title{Average associated spectra files into a single spectrum. Works on a single spectra or a 
 directory.}
 \usage{
-spec.avg(file.dir = NULL, out.dir = NULL, spec.type = "Reflectance",
-  instrument = NULL, spec.file.ext = NULL, start.wave = NULL,
-  end.wave = NULL, step.size = NULL, bias.threshold = NULL,
-  outlier.cutoff = 2, suffix.length = NULL, output.file.ext = NULL,
-  settings.file = NULL)
+spec.avg(
+  file.dir = NULL,
+  out.dir = NULL,
+  spec.type = "Reflectance",
+  instrument = NULL,
+  spec.file.ext = NULL,
+  start.wave = NULL,
+  end.wave = NULL,
+  step.size = NULL,
+  bias.threshold = NULL,
+  outlier.cutoff = 2,
+  suffix.length = NULL,
+  output.file.ext = NULL,
+  settings.file = NULL
+)
 }
 \arguments{
 \item{file.dir}{File directory or filename of single spectra for processing}
