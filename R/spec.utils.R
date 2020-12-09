@@ -970,10 +970,10 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
 
 #--------------------------------------------------------------------------------------------------#
 ##'
-##' @name plot.spectra
-##' @title NOT YET IMPLEMENTED
+#@name plot.spectra
+#@title NOT YET IMPLEMENTED
 ##'
-##' @author Shawn P. Serbin
+#@author Shawn P. Serbin
 ##' 
 # plot.spectra <- function(file.dir=NULL,out.dir=NULL,instrument=NULL,out.filename=NULL,
 #                          spec.file.ext=NULL,out.file.ext=".csv",settings.file=NULL){
@@ -1158,6 +1158,7 @@ concat.spectra <- function(file.dir=NULL,out.dir=NULL,out.filename=NULL,in.file.
 #--------------------------------------------------------------------------------------------------#
 ##'
 ##' @name transpose.spectra
+##' 
 ##' @title Transpose spectra file(s) from/to row or column major format.  Works with either a 
 ##' single spectrum or directory of spectral observations.
 ##' 

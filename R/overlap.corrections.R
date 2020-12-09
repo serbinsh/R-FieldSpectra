@@ -149,9 +149,7 @@ jump.correction <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,start.wave
   }
   
   ### Display info to the terminal
-  tmp  <- unlist(strsplit(file.dir,dlm))
-  current <- tmp[length(tmp)]
-  print(paste("------- Processing directory: ",current))
+  print(paste("------- Processing directory: ",file.dir))
   print(paste("------- Number of files: ",num.files))
   flush.console() #<--- show output in real-time
   

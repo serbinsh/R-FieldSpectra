@@ -41,7 +41,7 @@ plot(seq(350,2500,1),spectra[2,2:dim(spectra)[2]],type="l")
 jump.correction(settings.file=settings)
 
 ### Average spectra
-average.spec(settings.file=settings)
+average.spec(settings.file=settings, spec.type="Reflectance")
 spectra <- average.spec(settings.file=settings) # output a dataframe with the spectra
 
 # Look at spectra
