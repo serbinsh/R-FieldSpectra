@@ -4,13 +4,9 @@ R library for importing and processing field spectroscopy data collected with AS
 **Corresponding author**
 
 Dr. Shawn Serbin
-
 Environmental and Climate Sciences Department
-
 Brookhaven National Laboratory
-
 sserbin@bnl.gov
-
 Created by: Shawn P. Serbin <sserbin@bnl.gov>
 
 
@@ -40,3 +36,7 @@ output <- extract.metadata(file,instrument="SE")
 
 # MORE IN DEVELOPMENT
 ```
+
+### Source Code Citation
+[![DOI](https://zenodo.org/badge/9887372.svg)](https://zenodo.org/badge/latestdoi/9887372)
+
