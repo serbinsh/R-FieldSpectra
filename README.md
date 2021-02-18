@@ -3,11 +3,11 @@ R library for importing and processing field spectroscopy data collected with AS
 
 **Corresponding author**
 
-Dr. Shawn Serbin
-Environmental and Climate Sciences Department
-Brookhaven National Laboratory
-sserbin@bnl.gov
-Created by: Shawn P. Serbin <sserbin@bnl.gov>
+Dr. Shawn Serbin <br>
+Environmental and Climate Sciences Department <br>
+Brookhaven National Laboratory <br>
+sserbin@bnl.gov <br>
+Created by: Shawn P. Serbin <sserbin@bnl.gov> <br>
 
 
 ## Installation
