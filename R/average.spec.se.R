@@ -150,7 +150,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   # Grab wavelength info from files if not given
   if (is.null(start.wave) | is.null(end.wave) | is.null(step.size)) {
     wave.range <- as.character(extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),spec.file.ext=spec.file.ext)$Wavelength_Range)
-    channels <- as.numeric(as.character(droplevels(extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),spec.file.ext=spec.file.ext)$Detector_Channels)))
+    channels <- as.numeric(as.character((extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),spec.file.ext=spec.file.ext)$Detector_Channels)))
     start.wave <- as.numeric((strsplit(wave.range,"-")[[1]])[1])
     end.wave <- as.numeric((strsplit(wave.range,"-")[[1]])[2])
     step.size <- ((end.wave-start.wave)+1)/channels
@@ -170,8 +170,8 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   spec.names <- substr(spec.names,1,nchar(spec.names)-suffix.length)
   
   ### Read in sed files for averaging
-  data.columns <- as.numeric(as.character(droplevels(extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),
-                                                                      spec.file.ext=spec.file.ext)$Num_Data_Columns)))
+  data.columns <- as.numeric(as.character(extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),
+                                                                      spec.file.ext=spec.file.ext)$Num_Data_Columns))
   data.line <- extract.metadata(file.dir=paste0(file.dir,"/",se.files[1]),spec.file.ext=spec.file.ext)$Data_Line
   for (i in 1:num.files){ 
     spec.units <- as.character(extract.metadata(file.dir=paste0(file.dir,"/",se.files[i]),spec.file.ext=spec.file.ext)$Spec_Units)
@@ -238,8 +238,8 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   
   ### Update diagnostic info
   for (i in 1:dim(in.spec3)[1]){
-    info[i,1] <- as.character(droplevels(in.spec3[i,1]))
-    if (as.character(droplevels(in.spec3[i,1])) %in% droplevels(in.spec3[wht.ref,1])) {
+    info[i,1] <- as.character(in.spec3[i,1])
+    if (as.character(in.spec3[i,1]) %in% in.spec3[wht.ref,1]) {
       info[i,2] <- "Yes"
       info[i,3] <- NA
     } else {
@@ -248,7 +248,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
     }
   }
   for (i in 1:dim(in.spec3)[1]){ 
-    if (as.character(droplevels(in.spec3[i,1])) %in% droplevels(bad.spec[,1])){
+    if (as.character(in.spec3[i,1]) %in% bad.spec[,1]) {
       info[i,3] <- "Failed"
       info[i,4] <- as.numeric(round(in.spec3[i,"Wave_450"],4))
       info[i,5] <- "No"
@@ -262,7 +262,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   flush.console()                                #<--- show output in real-time
   
   ##### Initial average
-  ind <- factor(as.numeric(good.spec$Spectra))
+  ind <- factor(good.spec$Spectra)
   mat.data <- as.matrix(good.spec[,3:dims[2]])
   if (dim(mat.data)[1]==0){
     stop("Bias threshold too strict, no remaining spectra to average. Please update with less strict value")
@@ -281,13 +281,13 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   dims <- dim(good.spec) 
   spec.sdev <- aggregate(.~Spectra,data=good.spec[,2:dims[2]],sd,na.rm = TRUE, simplify=TRUE)
   spec.sdev[is.na(spec.sdev)]=0
-  spec.avg.names <- droplevels(spec.avg$Spectra)
+  spec.avg.names <- spec.avg$Spectra
   dims <- dim(spec.avg)
   rm(mat.data,ind)
   
   ### Setup spectral checks
   dims <- dim(spec.avg)
-  n <- rle(as.numeric(good.spec$Spectra))$lengths
+  n <- rle(good.spec$Spectra)$lengths
   spec.upper <- spec.avg[,2:dims[2]] + (spec.sdev[,2:dims[2]]*outlier.cutoff) # 2*SD outlier check
   #spec.upper <- spec.avg[,2:dims[2]] + ((spec.sdev[,2:dims[2]]/sqrt(n))*2.96)
   spec.upper <- data.frame(Spectra=spec.avg.names,spec.upper)
@@ -308,13 +308,13 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   flush.console()                                #<--- show output in real-time
   
   # Do second sdev check of spectra
-  ind <- as.numeric(good.spec$Spectra)
+  ind <- good.spec$Spectra
   good.spec2 <- as.matrix(good.spec[,-c(1,2)])
   spec.upper <- as.matrix(spec.upper[,-1])
   spec.lower <- as.matrix(spec.lower[,-1])
   for (i in 1:length(ind)){
     ind.avg <- ind[i]
-    orig.spec.name <- droplevels(good.spec[i,1])
+    orig.spec.name <- good.spec[i,1]
     # run check of individual spectra against the group mean
     # need to make sure indices are alligned
     # window <- 151:2051 # 500 - 2400
@@ -352,7 +352,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   ### Create final spectral averages
   rm(spec.avg)
   #spec.avg <- aggregate(.~Spectra,data=good.spec,mean,simplify=TRUE)
-  ind <- factor(as.numeric(good.spec$Spectra))
+  ind <- factor(good.spec$Spectra)
   mat.data <- as.matrix(good.spec[,2:dims[2]])
   spec.avg <- mApply(mat.data,ind,colMeans,simplify=TRUE)
   ### Reformat spectral data for output
@@ -399,7 +399,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   dims <- dim(wht.ref.spec)
   if (dims[1]>0){
     for (i in 1:dims[1]){
-      spec.name <- gsub("-","_",droplevels(wht.ref.spec[i,1]))
+      spec.name <- gsub("-","_",wht.ref.spec[i,1])
       out.spec <- t(wht.ref.spec[i,3:dims[2]])
       out.spec <- data.frame(Wavelength=seq(start.wave,end.wave,step.size),
                              Spectra=out.spec)
@@ -428,7 +428,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   dims <- dim(spec.avg)
   if (dims[1]>0){
     for (i in 1:dims[1]){
-      spec.name <- gsub("-","_",droplevels(spec.avg[i,1]))
+      spec.name <- gsub("-","_",spec.avg[i,1])
       out.spec <- t(spec.avg[i,2:dims[2]])
       out.spec <- data.frame(Wavelength=seq(start.wave,end.wave,step.size),
                              Spectra=out.spec)
