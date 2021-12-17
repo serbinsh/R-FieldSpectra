@@ -1,7 +1,7 @@
 Package: FieldSpectra
 Type: Package
 Title: Functions for processing field spectroscopy data. Current supported instruments include ADS FieldSpec, Spectral Evolution, and Spectra Vista Corporation
-Version: 0.9.6
+Version: 0.9.7
 Date: 2021-02-18
 Author: Shawn P. Serbin
 Authors@R:
@@ -10,6 +10,7 @@ Authors@R:
            role = c("aut", "cre", "ctb"),
            email = "sserbin@bnl.gov",
            comment = c(ORCID = "0000-0003-4136-8971")))
+Maintainer: Shawn P. Serbin <sserbin@bnl.gov>
 Description: A field spectroscopy package containing functions to process
     spectral files collected using an Analytical Spectral Devices (ASD),
     Spectral Evolution, or Spectra Vista Corporation (SVS) instruments. The goal 
@@ -33,5 +34,4 @@ Copyright: Authors
 LazyLoad: yes
 LazyData: FALSE
 Encoding: UTF-8
-RoxygenNote: 7.1.1
-VignetteBuilder: knitr
+RoxygenNote: 7.1.2
