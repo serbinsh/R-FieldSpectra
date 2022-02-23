@@ -255,7 +255,7 @@ average.spec <- function(file.dir=NULL,out.dir=NULL,spec.type="Reflectance",star
     stop("******** ERROR: Bias threshold too strict, no remaining spectra to average. Please correct ********")
   }
   ### Get spectra averages
-  spec.avg <- Hmisc::Apply(mat.data,ind,colMeans,simplify=TRUE)
+  spec.avg <- Hmisc::mApply(mat.data,ind,colMeans,simplify=TRUE)
   ### Reformat data for further processing
   if (is.null(dim(spec.avg)[1])) {
     spec.avg <- data.frame(Spectra=unique(good.spec$Spectra), t(as.vector(spec.avg)))
