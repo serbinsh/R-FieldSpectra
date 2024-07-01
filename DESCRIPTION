@@ -27,6 +27,7 @@ Suggests:
     spectrolab
 Depends:
     R (>= 2.10)
+Remotes: PEcAnRTM=github::PecanProject/pecan/modules/rtm/ 
 NeedsCompilation: no
 SystemRequirements: OS_type: unix, mac
 License: GNU GENERAL PUBLIC LICENSE Version 3
