@@ -25,7 +25,6 @@ Suggests:
     devtools,
     PEcAnRTM,
     spectrolab
-    
 Depends:
     R (>= 2.10)
 Remotes: 
