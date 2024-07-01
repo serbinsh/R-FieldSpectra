@@ -23,7 +23,9 @@ Imports:
 Suggests:
     testthat,
     devtools,
-    PEcAnRTM
+    PEcAnRTM,
+    spectrolab
+    
 Depends:
     R (>= 2.10)
 Remotes: 
