@@ -29,6 +29,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      PKG_SYSREQS: false
 
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +42,10 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
           extra-repositories: https://pecanproject.r-universe.dev
+          
+      - name: dependencies on Linux
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y make pandoc git libssl-dev libgdal-dev gdal-bin libgeos-dev libproj-dev libsqlite3-dev libicu-dev libudunits2-dev librdf0-dev libxml2-dev libfreetype6-dev libjpeg-dev libpng-dev libtiff-dev libfontconfig1-dev libfribidi-dev libharfbuzz-dev libcurl4-gnutls-dev
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
