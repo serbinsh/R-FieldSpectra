@@ -47,8 +47,8 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get install -y make pandoc git libssl-dev libgdal-dev gdal-bin libgeos-dev libproj-dev libsqlite3-dev libicu-dev libudunits2-dev librdf0-dev libxml2-dev libfreetype6-dev libjpeg-dev libpng-dev libtiff-dev libfontconfig1-dev libfribidi-dev libharfbuzz-dev libcurl4-gnutls-dev
         
-      - name: Install remotes package
-        run: install.packages("remotes")
+      # - name: Install remotes package
+      #   run: install.packages("remotes")
         
       - name: Install testthat from GitHub
         run: remotes::install_github("r-lib/testthat")
