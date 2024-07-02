@@ -55,7 +55,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, testthat
+          extra-packages: any::rcmdcheck, testthat, PEcAnRTM
           needs: check
           dependencies: '"hard"'
 
