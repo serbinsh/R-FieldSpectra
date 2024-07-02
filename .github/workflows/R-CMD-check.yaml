@@ -50,12 +50,12 @@ jobs:
       # - name: Install remotes package
       #   run: install.packages("remotes")
         
-      - name: Install testthat from GitHub
-        run: remotes::install_github("r-lib/testthat")
+      # - name: Install testthat from GitHub
+      #   run: remotes::install_github("r-lib/testthat")
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, testthat
           needs: check
           dependencies: '"hard"'
 
