@@ -1,3 +1,7 @@
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/georgejr45/R-FieldSpectra/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/georgejr45/R-FieldSpectra/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 # R-FieldSpectra
 R library for importing and processing field spectroscopy data collected with ASD, Spectra Vista, and Spectral Evolution instruments
 
