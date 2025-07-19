@@ -803,9 +803,9 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     ext.data.mask[i] <- gsub(" ","",(strsplit(file.head[12],"=")[[1]])[2]) #<- later split into ref and target
     fore.optic[i] <- gsub(" ","",(strsplit(file.head[13],"=")[[1]])[2]) #<- later split into ref and target
     detector.temp[i] <- gsub(" ","",(strsplit(file.head[14],"=")[[1]])[2]) #<- later split into ref and target
-    battery[i] <- gsub(" ","",(strsplit(file.head[15],"=")[[1]])[2]) 
-    error.code[i] <- gsub(" ","",(strsplit(file.head[16],"=")[[1]])[2]) 
-    raw.units[i] <- gsub(" ","",(strsplit(file.head[17],"=")[[1]])[2]) #<- later split into ref and target
+    battery[i] <- gsub(" ","",(strsplit(file.head[16],"=")[[1]])[2]) 
+    error.code[i] <- gsub(" ","",(strsplit(file.head[17],"=")[[1]])[2]) 
+    raw.units[i] <- gsub(" ","",(strsplit(file.head[18],"=")[[1]])[2]) #<- later split into ref and target
     date.time[i] <- (strsplit(file.head[18],"=")[[1]])[2]
     
     # Split into Date and Time.  Needs refining
@@ -820,7 +820,7 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     #
     
     # GPS on?  Clean this up
-    if (gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2])==","){
+    if (gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2])==",") {
       GPS.active[i] <- "no"
       ref.lattitude[i] <- "not_recorded"
       ref.longitude[i] <- "not_recorded"
@@ -830,11 +830,11 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
       target.gps.time[i] <- "not_recorded"
     } else {
       GPS.active[i] <- "yes"
-      ref.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[1]
+      ref.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[21],"=")[[1]])[2]),",")[[1]])[1]
       if (ref.lattitude[i]=="" | is.na(ref.lattitude[i])) {
         ref.lattitude[i] <- -9999
       }
-      target.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[2]
+      target.lattitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[21],"=")[[1]])[2]),",")[[1]])[2]
       if (target.lattitude[i]=="" | is.na(target.lattitude[i])) {
         target.lattitude[i] <- -9999
       }
@@ -845,11 +845,11 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
         lat.direction <- "S"
         lat.sign <- -1
       }
-      ref.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2]),",")[[1]])[1]
+      ref.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[1]
       if (ref.longitude[i]=="" | is.na(ref.longitude[i])) {
         ref.longitude[i] <- -9999
       }
-      target.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[19],"=")[[1]])[2]),",")[[1]])[2]
+      target.longitude[i] <- (strsplit(gsub(" ","",(strsplit(file.head[20],"=")[[1]])[2]),",")[[1]])[2]
       if (target.longitude[i]=="" | is.na(target.longitude[i])) {
         target.longitude[i] <- -9999
       }
@@ -883,23 +883,23 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
       }
       
       # GPS time
-      ref.gps.time[i] <- (strsplit(gsub(" ","",(strsplit(file.head[21],"=")[[1]])[2]),",")[[1]])[1]
+      ref.gps.time[i] <- (strsplit(gsub(" ","",(strsplit(file.head[22],"=")[[1]])[2]),",")[[1]])[1]
       ref.gps.time[i] <- paste0(paste(substr(ref.gps.time[i],1,2),substr(ref.gps.time[i],3,4),
                                       substr(ref.gps.time[i],5,6),sep=":"),"Z")
-      target.gps.time[i] <- (strsplit(gsub(" ","",(strsplit(file.head[21],"=")[[1]])[2]),",")[[1]])[2]
+      target.gps.time[i] <- (strsplit(gsub(" ","",(strsplit(file.head[22],"=")[[1]])[2]),",")[[1]])[2]
       target.gps.time[i] <- paste0(paste(substr(target.gps.time[i],1,2),substr(target.gps.time[i],3,4),
                                          substr(target.gps.time[i],5,6),sep=":"),"Z")               
     } # End of GPS info
     
-    ref.memory.slot[i] <- as.numeric((strsplit(gsub(" ","",(strsplit(file.head[23],"=")[[1]])[2]),",")[[1]])[1])
-    target.memory.slot[i] <- as.numeric((strsplit(gsub(" ","",(strsplit(file.head[23],"=")[[1]])[2]),",")[[1]])[2])
+    ref.memory.slot[i] <- as.numeric((strsplit(gsub(" ","",(strsplit(file.head[24],"=")[[1]])[2]),",")[[1]])[1])
+    target.memory.slot[i] <- as.numeric((strsplit(gsub(" ","",(strsplit(file.head[24],"=")[[1]])[2]),",")[[1]])[2])
     
     # Overlap handling.  Removed or preserved?
-    if (grepl(pattern="Overlap: ?.emove",file.head[24])){
+    if (grepl(pattern="Overlap: ?.emove",file.head[25])){
       overlap.handling[i] <- "Removed"
-      overlap.transition.wavelengths[i] <- gsub(" ","",substr(file.head[24],
-      gregexpr(pattern="@",file.head[24])[[1]][1]+1,gregexpr(pattern="Matching",file.head[24])[[1]][1]-3))
-    } else if (grepl(pattern="Overlap: ?.reserve",file.head[24])){
+      overlap.transition.wavelengths[i] <- gsub(" ","",substr(file.head[25],
+      gregexpr(pattern="@",file.head[25])[[1]][1]+1,gregexpr(pattern="Matching",file.head[25])[[1]][1]-3))
+    } else if (grepl(pattern="Overlap: ?.reserve",file.head[25])){
       overlap.handling[i] <- "Preserved"
       overlap.transition.wavelengths[i] <- paste("NA","NA",sep=",")
     } else {
@@ -908,15 +908,15 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
     }
     
     # Matching type: none/Radiance/Reflectance
-    matching.type[i] <- gsub(" ","",substr(file.head[24],
-           regexec(pattern="Matching Type: ?(\\w+)",file.head[24])[[1]][2],
-           gregexpr(pattern="@",file.head[24])[[1]][2]-1))
+    matching.type[i] <- gsub(" ","",substr(file.head[25],
+           regexec(pattern="Matching Type: ?(\\w+)",file.head[25])[[1]][2],
+           gregexpr(pattern="@",file.head[25])[[1]][2]-1))
     if (is.na(matching.type[i])) {
       overlap.matching.wavelengths[i] <- paste("NA","NA",sep=",")
     } else if (matching.type[i]=="Radiance" || matching.type[i]=="Reflectance") {
-      overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[24],
-                                              gregexpr(pattern="@",file.head[24])[[1]][2]+1,
-                                              gregexpr(pattern="/",file.head[24])[[1]][1]-1))
+      overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[25],
+                                              gregexpr(pattern="@",file.head[25])[[1]][2]+1,
+                                              gregexpr(pattern="/",file.head[25])[[1]][1]-1))
     }
 #    if (matching.type[i]=="Radiance" || matching.type[i]=="Reflectance"){
 #      overlap.matching.wavelengths[i] <- gsub(" ","",substr(file.head[24],
@@ -926,21 +926,21 @@ extract.metadata.svc <- function(file.dir,out.dir,spec.file.ext,output.file.ext,
 #      overlap.matching.wavelengths[i] <- paste("NA","NA",sep=",")
 #    }
     
-    if (grepl(pattern='NIR-SWIR [Oo]ff',file.head[24])){
+    if (grepl(pattern='NIR-SWIR [Oo]ff',file.head[25])){
       nir.swir.alg[i] <- "No"
-    } else if (grepl(pattern='NIR-SWIR [Oo]n',file.head[24])){
+    } else if (grepl(pattern='NIR-SWIR [Oo]n',file.head[25])){
       nir.swir.alg[i] <- "Yes"
     } else {
       nir.swir.alg[i] <- "Unknown"
     }
       
     # Get factors - needs refinement
-    factors[i] <- gsub(" ","",substr(file.head[24],regexec(pattern="= ",file.head[24])[[1]][1]+1,
-                       gregexpr(pattern="Overlap:",file.head[24])[[1]][1]-2))
+    factors[i] <- gsub(" ","",substr(file.head[25],regexec(pattern="= ",file.head[25])[[1]][1]+1,
+                       gregexpr(pattern="Overlap:",file.head[25])[[1]][1]-2))
     
     # Get comments - needs refinement
-    comments[i] <- substr(file.head[22],gregexpr(pattern="=",file.head[22])[[1]][1]+2,
-                                      nchar(file.head[22])-1)
+    comments[i] <- substr(file.head[23],gregexpr(pattern="=",file.head[23])[[1]][1]+2,
+                                      nchar(file.head[23])-1)
   } # end of file loop
   
   # Create output
