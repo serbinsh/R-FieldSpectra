@@ -370,8 +370,8 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   ### Output bad spectra files and figs
   dims <- dim(bad.spec)
   if (dims[1]>0){
-    for (i in 1:dims[1]){
-      spec.name <- gsub("-","_",droplevels(bad.spec[i,1]))
+    for (i in seq_along(1:dims[1])){
+      spec.name <- gsub("-","_",(bad.spec[i,1]))
       out.spec <- t(bad.spec[i,3:dims[2]])
       out.spec <- data.frame(Wavelength=seq(start.wave,end.wave,step.size),
                              Spectra=out.spec)
