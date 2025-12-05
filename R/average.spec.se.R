@@ -89,10 +89,15 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   whiteref.dir <- paste(out.dir,dlm,"White_Reference_Spectra",sep="")
   if (! file.exists(whiteref.dir)) dir.create(whiteref.dir,recursive=TRUE)
   
+  ### Create individual good spectra folder
+  goodspec.dir <- paste(out.dir,dlm,"Individual_Spectra",sep="")
+  if (! file.exists(goodspec.dir)) dir.create(goodspec.dir,recursive=TRUE)
+  
   ### Remove any previous output in out.dir
   unlink(list.files(out.dir,full.names=TRUE),recursive=FALSE,force=TRUE)
   unlink(list.files(badspec.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
   unlink(list.files(whiteref.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
+  unlink(list.files(goodspec.dir,full.names=TRUE),recursive=TRUE,force=TRUE)
   
   ### Look for a custom output extension, otherwise use default
   if (is.null(settings.file$options$output.file.ext) && is.null(output.file.ext)){
@@ -347,12 +352,44 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
   
   # Keep only remaining spectra
   good.spec <- droplevels(good.spec[!is.na(good.spec[,3]),])
+  
+  # Output individual (non averaged) spec files
+  dims <- dim(good.spec)
+  if (dims[1]>0){
+    for (i in seq_along(1:dims[1])){
+      spec.name <- gsub("-","_",(good.spec[i,1]))
+      #print(spec.name)
+      out.spec <- t(good.spec[i,3:dims[2]])
+      out.spec <- data.frame(Wavelength=seq(start.wave,end.wave,step.size),
+                             Spectra=out.spec)
+      names(out.spec)=c("Wavelength",paste(spec.name))
+      out.filename <- paste(spec.name,output.file.ext,sep="")
+      write.csv(out.spec,paste(goodspec.dir,dlm,out.filename,sep=""),row.names=FALSE)
+      
+      # Output plot of bad spectra for quick reference
+      rng <- range(out.spec[,2])
+      if (rng[1]<0) rng[1] <- 0
+      if (rng[2]>1) rng[2] <- 1
+      ylimit <- c(rng[1],rng[2])
+      png(file=paste(goodspec.dir,dlm,spec.name,".png",sep=""),width=800,height=600,res=100)
+      plot(out.spec[,1], out.spec[,2],cex=0.01,xlim=c(350,2500),ylim=ylimit,xlab="Wavelength (nm)",
+           ylab=paste(spec.type,"(%)",sep=" "), main=out.filename,cex.axis=1.3,cex.lab=1.3)
+      lines(out.spec[,1], out.spec[,2],lwd=2)
+      abline(h=bias,lty=2,col="dark grey")
+      box(lwd=2.2)
+      dev.off()
+    } 
+    rm(spec.name,out.spec,out.filename,dims)
+  } # End of output of good spectra
+  
+  # prep for averaging
   good.spec <- droplevels(good.spec[,-1])
   
   ### Create final spectral averages
   rm(spec.avg)
   #spec.avg <- aggregate(.~Spectra,data=good.spec,mean,simplify=TRUE)
   ind <- factor(good.spec$Spectra)
+  dims <- dim(good.spec)
   mat.data <- as.matrix(good.spec[,2:dims[2]])
   spec.avg <- mApply(mat.data,ind,colMeans,simplify=TRUE)
   ### Reformat spectral data for output
@@ -451,6 +488,7 @@ average.spec.se <- function(file.dir=NULL,out.dir=NULL,spec.type=NULL,spec.file.
     }
     rm(spec.name,out.spec,out.filename,dims)
   }
+
   
   ### Write out concatenated averaged spectra
   spec.avg[,1] <- gsub("-","_",spec.avg[,1])
